@@ -1,0 +1,78 @@
+{
+  "name": "pubmed-reader-cskill",
+  "owner": {
+    "name": "Agent Creator",
+    "email": "noreply@example.com"
+  },
+  "metadata": {
+    "description": "PubMed article reader and literature explorer for biologists - search articles, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature using NCBI E-utilities and BioC PMC APIs",
+    "version": "1.0.0",
+    "created": "2026-02-04",
+    "updated": "2026-02-04"
+  },
+  "plugins": [
+    {
+      "name": "pubmed-reader-plugin",
+      "description": "PubMed article reader and literature explorer for biologists - search articles, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature using NCBI E-utilities and BioC PMC APIs",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ],
+  "activation": {
+    "keywords": [
+      "search pubmed for",
+      "find articles about",
+      "read this pubmed article",
+      "get abstract for pmid",
+      "find papers on",
+      "pubmed search",
+      "literature search",
+      "find similar articles",
+      "what papers cite this",
+      "cited by pmid",
+      "related articles to",
+      "full text of pmid",
+      "read paper pmid",
+      "biomedical literature"
+    ],
+    "patterns": [
+      "(?i)(search|find|look\\s+for)\\s+(pubmed|papers?|articles?|literature)\\s+(for|about|on)",
+      "(?i)(read|get|fetch|show)\\s+(abstract|full\\s+text|paper|article)\\s+(for\\s+)?pmid",
+      "(?i)pmid\\s*[:#]?\\s*\\d+",
+      "(?i)(similar|related)\\s+(articles?|papers?)\\s+(to|for)",
+      "(?i)(cit(ed|ations?)|references?)\\s+(by|for|of)\\s+pmid",
+      "(?i)what\\s+(papers?|articles?)\\s+(cite|reference)",
+      "(?i)(biomedical|medical|scientific)\\s+literature\\s+(search|review)"
+    ]
+  },
+  "usage": {
+    "when_to_use": [
+      "User asks to search PubMed for articles on a topic",
+      "User mentions PMID or wants to read a specific article",
+      "User wants to find similar or related papers",
+      "User asks about citations or papers that cite a given article",
+      "User wants full text access for open access articles",
+      "User needs to explore biomedical literature systematically",
+      "User asks to summarize or extract information from papers"
+    ],
+    "when_not_to_use": [
+      "User asks about non-biomedical topics unrelated to PubMed",
+      "User wants to query gene/protein databases like UniProt or GeneCards",
+      "User asks for clinical trial data from ClinicalTrials.gov",
+      "User wants to access paywalled articles not in PMC Open Access"
+    ]
+  },
+  "test_queries": [
+    "Search PubMed for CRISPR gene editing 2024",
+    "Find articles about cancer immunotherapy",
+    "Read abstract for PMID 12345678",
+    "What papers cite PMID 17299597?",
+    "Find similar articles to PMID 11850928",
+    "Get full text of PMC1790863",
+    "Literature search for Alzheimer's disease biomarkers",
+    "Show me recent papers on mRNA vaccines",
+    "Explore citations for this cancer study PMID 20210808",
+    "Find related research on BRCA1 mutations"
+  ]
+}
