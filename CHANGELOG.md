@@ -5,6 +5,54 @@ All notable changes to PubMed & arXiv Reader skill will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-02-05
+
+### Added
+
+**bioRxiv/medRxiv Support:**
+- `search_biorxiv()`: Search bioRxiv/medRxiv preprints via website search
+- `browse_biorxiv_recent()`: Browse recent preprints by date via official API
+- `fetch_biorxiv_paper()`: Fetch preprint metadata and abstract by DOI
+- `batch_fetch_biorxiv()`: Fetch multiple preprints in batch
+- `get_biorxiv_fulltext()`: Retrieve and parse full text via JATS XML or HTML
+- `check_fulltext_availability()`: Check if full text is available
+- `format_biorxiv_citation()`: Format bioRxiv/medRxiv papers in Vancouver-style references
+- `validate_biorxiv_doi()`: Validate bioRxiv/medRxiv DOI format (10.1101 and 10.64898 prefixes)
+- `validate_biorxiv_doi_param()`: Parameter validator for bioRxiv/medRxiv DOIs
+- `extract_biorxiv_doi_from_text()`: Extract bioRxiv/medRxiv DOIs from text
+
+**New Scripts:**
+- `scripts/search_biorxiv.py`: bioRxiv/medRxiv website search and API browsing
+- `scripts/fetch_biorxiv.py`: bioRxiv/medRxiv paper metadata/abstract retrieval
+- `scripts/fetch_biorxiv_fulltext.py`: bioRxiv/medRxiv JATS XML and HTML full text parsing
+
+**New Workflows in SKILL.md:**
+- Workflow 11: Search bioRxiv/medRxiv for Preprints
+- Workflow 12: Read bioRxiv/medRxiv Paper
+- Workflow 13: Get bioRxiv/medRxiv Full Text
+
+**New Tests:**
+- 8 bioRxiv integration tests (search, browse, fetch, batch, fulltext, validation)
+- Total test count: 32
+
+### Changed
+
+- Renamed skill from "PubMed & arXiv Reader" to "PubMed, arXiv & bioRxiv Reader"
+- Updated SKILL.md description to include bioRxiv/medRxiv capabilities
+- Updated activation keywords for bioRxiv/medRxiv triggers (biorxiv, medrxiv, 10.1101, etc.)
+- Updated architecture overview to include bioRxiv/medRxiv API
+- Added bioRxiv/medRxiv rate limit documentation
+- Updated helpers.py with bioRxiv DOI validation and citation formatting
+- Updated parameter_validator.py with bioRxiv DOI validation
+
+### Data Coverage
+
+**bioRxiv/medRxiv:**
+- 200,000+ preprints on bioRxiv
+- 100,000+ preprints on medRxiv
+- Full text via JATS XML (structured) or HTML
+- No authentication required
+
 ## [1.3.0] - 2026-02-05
 
 ### Added
@@ -191,7 +239,7 @@ Biomedical literature should always be cited in proper NLM/Vancouver format — 
 
 ### Planned
 
-- Add support for preprint servers (bioRxiv, medRxiv)
 - Improve full text extraction for complex articles
 - Add visualization of citation networks
 - Support for non-English abstracts
+- Export to citation managers (BibTeX, RIS)

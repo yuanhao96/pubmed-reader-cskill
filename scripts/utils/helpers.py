@@ -651,6 +651,169 @@ def format_arxiv_citation(article: Dict[str, Any], style: str = "vancouver") -> 
 
 
 # =============================================================================
+# bioRxiv/medRxiv ID Validation
+# =============================================================================
+
+# bioRxiv DOI patterns:
+# Legacy: 10.1101/YYYY.MM.DD.XXXXXX
+# New: 10.64898/YYYY.MM.DD.XXXXXX
+BIORXIV_DOI_PATTERN = r'^10\.(1101|64898)/\d{4}\.\d{2}\.\d{2}\.\d{6,8}$'
+
+
+def validate_biorxiv_doi(doi: Any) -> Tuple[bool, Optional[str], Optional[str]]:
+    """
+    Validate bioRxiv/medRxiv DOI format.
+
+    Supports both legacy (10.1101) and new (10.64898) DOI prefixes.
+
+    Args:
+        doi: Value to validate (string)
+
+    Returns:
+        Tuple of (is_valid, normalized_doi, error_message)
+
+    Example:
+        >>> validate_biorxiv_doi("10.1101/2024.01.15.575889")
+        (True, "10.1101/2024.01.15.575889", None)
+        >>> validate_biorxiv_doi("https://www.biorxiv.org/content/10.1101/2024.01.15.575889v1")
+        (True, "10.1101/2024.01.15.575889", None)
+    """
+    if doi is None:
+        return False, None, "DOI cannot be None"
+
+    doi_str = str(doi).strip()
+
+    if not doi_str:
+        return False, None, "DOI cannot be empty"
+
+    # Remove URL prefixes
+    doi_str = re.sub(r'^https?://(www\.)?(bio|med)rxiv\.org/content/', '', doi_str)
+    doi_str = re.sub(r'^https?://(dx\.)?doi\.org/', '', doi_str)
+    doi_str = re.sub(r'^doi:\s*', '', doi_str, flags=re.IGNORECASE)
+
+    # Remove version suffix (v1, v2, etc.)
+    doi_str = re.sub(r'v\d+$', '', doi_str)
+
+    # Remove trailing suffixes like .full, .abstract
+    doi_str = re.sub(r'\.(full|abstract|pdf)$', '', doi_str, flags=re.IGNORECASE)
+
+    # Validate format
+    if not re.match(BIORXIV_DOI_PATTERN, doi_str):
+        return False, None, "DOI must be in format 10.1101/YYYY.MM.DD.XXXXXX (e.g., 10.1101/2024.01.15.575889)"
+
+    return True, doi_str, None
+
+
+def extract_biorxiv_doi_from_text(text: str) -> List[str]:
+    """
+    Extract bioRxiv/medRxiv DOIs from text.
+
+    Args:
+        text: Text containing DOIs
+
+    Returns:
+        List of extracted DOIs
+
+    Example:
+        >>> extract_biorxiv_doi_from_text("See bioRxiv 10.1101/2024.01.15.575889 for details")
+        ["10.1101/2024.01.15.575889"]
+    """
+    patterns = [
+        # Full DOI pattern
+        r'(10\.(1101|64898)/\d{4}\.\d{2}\.\d{2}\.\d{6,8})',
+        # URL pattern
+        r'(?:bio|med)rxiv\.org/content/(10\.(1101|64898)/\d{4}\.\d{2}\.\d{2}\.\d{6,8})',
+        # doi.org pattern
+        r'doi\.org/(10\.(1101|64898)/\d{4}\.\d{2}\.\d{2}\.\d{6,8})',
+    ]
+
+    dois = []
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        for match in matches:
+            # Handle tuple matches from groups
+            doi = match[0] if isinstance(match, tuple) else match
+            if doi and doi not in dois:
+                # Clean version suffix
+                doi = re.sub(r'v\d+$', '', doi)
+                dois.append(doi)
+
+    return dois
+
+
+def format_biorxiv_citation(article: Dict[str, Any], style: str = "vancouver") -> str:
+    """
+    Format bioRxiv/medRxiv article as a strictly formatted reference.
+
+    Args:
+        article: Article metadata dict with keys: authors, title, doi,
+                 posted_date, year, server, category
+        style: Citation style ("vancouver", "simple")
+
+    Returns:
+        Formatted reference string
+
+    Example:
+        Vancouver:
+            Smith J, Jones M, et al. Paper title here. bioRxiv. 2024.
+            doi:10.1101/2024.01.15.575889. [Preprint].
+    """
+    authors = article.get('authors', [])
+    title = article.get('title', 'Untitled').rstrip('.')
+    doi = article.get('doi', '')
+    year = article.get('year', '')
+    posted_date = article.get('posted_date', '')
+    server = article.get('server', article.get('source', 'bioRxiv'))
+    category = article.get('category', '')
+    published = article.get('published', '')
+
+    # Normalize server name
+    server_name = "bioRxiv" if server.lower() == "biorxiv" else "medRxiv"
+
+    if style == "vancouver":
+        # Format authors
+        if authors and isinstance(authors[0], dict):
+            author_str = format_authors(authors, max_authors=6, style="short")
+        elif authors and isinstance(authors[0], str):
+            if len(authors) > 6:
+                author_str = ", ".join(authors[:6]) + ", et al."
+            else:
+                author_str = ", ".join(authors)
+        else:
+            author_str = "Unknown authors"
+
+        citation = f"{author_str}. {title}. {server_name}."
+
+        if year:
+            citation += f" {year}."
+
+        if doi:
+            citation += f" doi:{doi}."
+
+        # Add preprint indicator
+        if published:
+            citation += f" Published: {published}."
+        else:
+            citation += " [Preprint]."
+
+        if category:
+            citation += f" [{category}]."
+
+        return citation
+
+    else:  # simple
+        if authors and isinstance(authors[0], str):
+            author_str = authors[0] + (" et al." if len(authors) > 1 else "")
+        elif authors and isinstance(authors[0], dict):
+            author_str = format_authors(authors, max_authors=3, style="short")
+        else:
+            author_str = "Unknown authors"
+
+        citation = f"{author_str} ({year}). {title}. {server_name}. doi:{doi}."
+        return citation
+
+
+# =============================================================================
 # Text Processing
 # =============================================================================
 

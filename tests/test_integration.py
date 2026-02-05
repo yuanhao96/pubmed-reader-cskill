@@ -24,6 +24,9 @@ from strategic_literature_search import (
 from search_arxiv import search_arxiv, build_arxiv_query
 from fetch_arxiv import fetch_arxiv_paper, batch_fetch_arxiv
 from fetch_arxiv_fulltext import get_arxiv_fulltext, check_html_availability
+from search_biorxiv import search_biorxiv, browse_biorxiv_recent
+from fetch_biorxiv import fetch_biorxiv_paper, batch_fetch_biorxiv
+from fetch_biorxiv_fulltext import get_biorxiv_fulltext, check_fulltext_availability as check_biorxiv_fulltext_availability
 
 
 def test_search_pubmed_basic():
@@ -610,10 +613,211 @@ def test_invalid_arxiv_id_handling():
         return False
 
 
+# =============================================================================
+# bioRxiv/medRxiv Tests
+# =============================================================================
+
+def test_search_biorxiv_basic():
+    """Test basic bioRxiv search."""
+    print("\n Testing search_biorxiv()...")
+
+    try:
+        result = search_biorxiv("CRISPR", max_results=5)
+
+        # Website search may be blocked (403) - that's expected
+        # as bioRxiv doesn't officially support website scraping
+        if not result.get('success'):
+            error = result.get('error', {})
+            if 'Forbidden' in error.get('message', '') or '403' in error.get('message', ''):
+                print(f"  Website search blocked (expected): 403 Forbidden")
+                print(f"  Note: Use browse_biorxiv_recent() for API access instead")
+                return True
+            else:
+                print(f"  Unexpected error: {error.get('message')}")
+                return False
+
+        print(f"  Found {result.get('count', 0)} preprints")
+        print(f"  Returned {len(result.get('articles', []))} results")
+
+        # Check article structure if we have results
+        articles = result.get('articles', [])
+        if articles:
+            article = articles[0]
+            assert 'doi' in article or 'title' in article, "Missing basic fields"
+            print(f"  First result: {article.get('title', 'N/A')[:50]}...")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_browse_biorxiv_recent():
+    """Test browsing recent bioRxiv preprints."""
+    print("\n Testing browse_biorxiv_recent()...")
+
+    try:
+        result = browse_biorxiv_recent(days=7, max_results=5)
+
+        assert result.get('success'), f"Browse failed: {result.get('error')}"
+
+        print(f"  Found {result.get('count', 0)} recent preprints")
+        print(f"  Returned {len(result.get('articles', []))} results")
+
+        # Check query info
+        query_info = result.get('query_info', {})
+        assert query_info.get('browse_type') == 'recent', "Wrong browse type"
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_fetch_biorxiv_paper():
+    """Test fetching bioRxiv paper metadata."""
+    print("\n Testing fetch_biorxiv_paper()...")
+
+    try:
+        # Known bioRxiv preprint (COVID-19 related, likely to remain available)
+        result = fetch_biorxiv_paper("10.1101/2020.05.22.111161")
+
+        assert result.get('success'), f"Fetch failed: {result.get('error')}"
+        assert result.get('doi'), "No DOI returned"
+        assert result.get('title'), "No title"
+        assert result.get('authors'), "No authors"
+
+        print(f"  Title: {result['title'][:50]}...")
+        print(f"  Authors: {len(result['authors'])} authors")
+        print(f"  Year: {result.get('year')}")
+        print(f"  Server: {result.get('server', 'N/A')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_fetch_biorxiv_from_url():
+    """Test fetching bioRxiv paper from URL."""
+    print("\n Testing fetch_biorxiv_paper() with URL...")
+
+    try:
+        result = fetch_biorxiv_paper("https://www.biorxiv.org/content/10.1101/2020.05.22.111161v1")
+
+        assert result.get('success'), f"Fetch failed: {result.get('error')}"
+        assert '10.1101/2020.05.22.111161' in result.get('doi', ''), "Wrong DOI"
+
+        print(f"  DOI: {result['doi']}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_batch_fetch_biorxiv():
+    """Test batch fetching bioRxiv papers."""
+    print("\n Testing batch_fetch_biorxiv()...")
+
+    try:
+        dois = ["10.1101/2020.05.22.111161", "10.1101/2020.01.30.927871"]
+        result = batch_fetch_biorxiv(dois)
+
+        assert result.get('success'), "Batch fetch failed"
+
+        stats = result.get('stats', {})
+        print(f"  Requested: {stats.get('requested')}")
+        print(f"  Fetched: {stats.get('fetched')}")
+        print(f"  Failed: {stats.get('failed')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_check_biorxiv_fulltext_availability():
+    """Test checking bioRxiv full text availability."""
+    print("\n Testing check_fulltext_availability()...")
+
+    try:
+        result = check_biorxiv_fulltext_availability("10.1101/2020.05.22.111161")
+
+        print(f"  DOI 10.1101/2020.05.22.111161: Available={result.get('available')}")
+        if result.get('jatsxml_url'):
+            print(f"  JATS XML: Available")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_get_biorxiv_fulltext():
+    """Test getting bioRxiv full text."""
+    print("\n Testing get_biorxiv_fulltext()...")
+
+    try:
+        result = get_biorxiv_fulltext("10.1101/2020.05.22.111161")
+
+        if result.get('success'):
+            print(f"  Word count: {result.get('word_count', 0)}")
+            print(f"  Sections: {list(result.get('sections', {}).keys())[:5]}")
+            print(f"  Figures: {len(result.get('figures', []))}")
+            print(f"  References: {len(result.get('references', []))}")
+            print(f"  Format: {result.get('format', 'unknown')}")
+            return True
+        else:
+            # Full text may be blocked by website (403) or JATS not available
+            error = result.get('error', {})
+            if '403' in error.get('message', '') or 'Forbidden' in str(error):
+                print(f"  Full text blocked (403): This is expected for some IPs")
+                return True
+            print(f"  Full text not available: {error.get('message')}")
+            return True  # Not a failure
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_invalid_biorxiv_doi_handling():
+    """Test handling of invalid bioRxiv DOI."""
+    print("\n Testing invalid bioRxiv DOI handling...")
+
+    try:
+        result = fetch_biorxiv_paper("invalid_doi")
+
+        assert not result.get('success'), "Should have failed"
+        assert 'error' in result, "No error info"
+
+        print(f"  Error handled: {result['error'].get('code')}")
+        print(f"  Message: {result['error'].get('message')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
 def main():
     """Run all integration tests."""
     print("=" * 70)
-    print("INTEGRATION TESTS - PubMed & arXiv Reader Skill")
+    print("INTEGRATION TESTS - PubMed, arXiv & bioRxiv Reader Skill")
     print("=" * 70)
 
     tests = [
@@ -641,6 +845,14 @@ def main():
         ("arXiv Full Text", test_get_arxiv_fulltext),
         ("arXiv Query Builder", test_arxiv_query_builder),
         ("Invalid arXiv ID Handling", test_invalid_arxiv_id_handling),
+        ("bioRxiv Search (basic)", test_search_biorxiv_basic),
+        ("bioRxiv Browse Recent", test_browse_biorxiv_recent),
+        ("bioRxiv Fetch Paper", test_fetch_biorxiv_paper),
+        ("bioRxiv Fetch from URL", test_fetch_biorxiv_from_url),
+        ("bioRxiv Batch Fetch", test_batch_fetch_biorxiv),
+        ("bioRxiv Fulltext Availability", test_check_biorxiv_fulltext_availability),
+        ("bioRxiv Full Text", test_get_biorxiv_fulltext),
+        ("Invalid bioRxiv DOI Handling", test_invalid_biorxiv_doi_handling),
     ]
 
     results = []

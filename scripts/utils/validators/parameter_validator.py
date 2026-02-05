@@ -503,6 +503,72 @@ def validate_arxiv_id_param(arxiv_id: Any, param_name: str = "arxiv_id") -> str:
     return id_str
 
 
+def validate_biorxiv_doi_param(doi: Any, param_name: str = "doi") -> str:
+    """
+    Validate and normalize bioRxiv/medRxiv DOI parameter.
+
+    Supports both legacy (10.1101) and new (10.64898) DOI prefixes.
+    Also accepts full URLs and doi: prefixed values.
+
+    Args:
+        doi: Value to validate
+        param_name: Name for error messages
+
+    Returns:
+        Normalized DOI string
+
+    Raises:
+        ValidationError: If validation fails
+
+    Example:
+        >>> validate_biorxiv_doi_param("10.1101/2024.01.15.575889")
+        "10.1101/2024.01.15.575889"
+        >>> validate_biorxiv_doi_param("https://www.biorxiv.org/content/10.1101/2024.01.15.575889v1")
+        "10.1101/2024.01.15.575889"
+    """
+    if doi is None:
+        raise ValidationError(
+            f"{param_name} cannot be None",
+            param_name=param_name,
+            suggestion="Provide a valid bioRxiv/medRxiv DOI (e.g., 10.1101/2024.01.15.575889)"
+        )
+
+    doi_str = str(doi).strip()
+
+    if not doi_str:
+        raise ValidationError(
+            f"{param_name} cannot be empty",
+            param_name=param_name,
+            suggestion="Provide a valid bioRxiv/medRxiv DOI"
+        )
+
+    # Remove URL prefixes
+    doi_str = re.sub(r'^https?://(www\.)?(bio|med)rxiv\.org/content/', '', doi_str)
+    doi_str = re.sub(r'^https?://(dx\.)?doi\.org/', '', doi_str)
+    doi_str = re.sub(r'^doi:\s*', '', doi_str, flags=re.IGNORECASE)
+
+    # Remove version suffix (v1, v2, etc.)
+    doi_str = re.sub(r'v\d+$', '', doi_str)
+
+    # Remove trailing suffixes like .full, .abstract
+    doi_str = re.sub(r'\.(full|abstract|pdf)$', '', doi_str, flags=re.IGNORECASE)
+
+    # Validate format
+    # bioRxiv DOI patterns:
+    # Legacy: 10.1101/YYYY.MM.DD.XXXXXX
+    # New: 10.64898/YYYY.MM.DD.XXXXXX
+    biorxiv_pattern = r'^10\.(1101|64898)/\d{4}\.\d{2}\.\d{2}\.\d{6,8}$'
+
+    if not re.match(biorxiv_pattern, doi_str):
+        raise ValidationError(
+            f"Invalid bioRxiv/medRxiv DOI format: '{doi}'",
+            param_name=param_name,
+            suggestion="DOI should be 10.1101/YYYY.MM.DD.XXXXXX (e.g., 10.1101/2024.01.15.575889)"
+        )
+
+    return doi_str
+
+
 # =============================================================================
 # Main (for testing)
 # =============================================================================

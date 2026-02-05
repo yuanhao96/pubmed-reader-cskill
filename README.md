@@ -1,14 +1,16 @@
-# PubMed & arXiv Reader - Scientific Literature Explorer
+# PubMed, arXiv & bioRxiv Reader - Scientific Literature Explorer
 
-A Claude Code skill for reading PubMed and arXiv articles like a real scientist would - browsing pages, extracting information, following citations, and discovering related research.
+A Claude Code skill for reading PubMed, arXiv, bioRxiv, and medRxiv articles like a real scientist would - browsing pages, extracting information, following citations, and discovering related research.
 
 ## Features
 
 - **Search PubMed**: Find articles with complex queries, date filters, and field tags
 - **Search arXiv**: Find preprints with field prefixes (ti:, au:, abs:, cat:), sort by relevance or date
-- **Read Abstracts**: Fetch complete article metadata, abstracts, and keywords from PubMed or arXiv
+- **Search bioRxiv/medRxiv**: Find biology and medical preprints, browse by date or keyword
+- **Read Abstracts**: Fetch complete article metadata, abstracts, and keywords from PubMed, arXiv, bioRxiv, or medRxiv
 - **Full Text Access**: Retrieve full text for ~3 million PubMed Open Access articles
 - **arXiv Full Text**: Parse HTML full text from arXiv papers (LaTeXML-rendered)
+- **bioRxiv Full Text**: Parse JATS XML or HTML full text from bioRxiv/medRxiv preprints
 - **Citation Tracking**: Find papers that cite a given article
 - **Related Research**: Discover similar articles based on content and MeSH terms
 - **Comprehensive Reports**: Generate complete analysis combining all data sources
@@ -49,6 +51,9 @@ Once installed, simply ask Claude:
 "What papers cite PMID 32756549?"
 "Get full text of PMC1790863"
 "Give me a comprehensive report on PMID 17299597"
+"Search bioRxiv for gene therapy"
+"Read bioRxiv preprint 10.1101/2024.01.15.575889"
+"Get recent medRxiv preprints on COVID-19"
 ```
 
 ## Capabilities

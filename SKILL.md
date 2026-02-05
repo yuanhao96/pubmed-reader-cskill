@@ -1,11 +1,11 @@
 ---
 name: pubmed-reader-cskill
-description: PubMed and arXiv article reader and literature explorer for scientists - search PubMed and arXiv, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical and scientific literature using NCBI E-utilities, BioC PMC, and arXiv APIs
+description: PubMed, arXiv, bioRxiv, and medRxiv reader and literature explorer for scientists - search articles and preprints, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical and scientific literature using NCBI E-utilities, BioC PMC, arXiv, and bioRxiv/medRxiv APIs
 ---
 
-# PubMed & arXiv Reader - Scientific Literature Explorer
+# PubMed, arXiv & bioRxiv Reader - Scientific Literature Explorer
 
-A comprehensive Claude Code skill for reading PubMed and arXiv articles like a real scientist would - browsing pages, extracting information, following citations, and discovering related research through biomedical and scientific literature networks.
+A comprehensive Claude Code skill for reading PubMed, arXiv, bioRxiv, and medRxiv articles like a real scientist would - browsing pages, extracting information, following citations, and discovering related research through biomedical and scientific literature networks.
 
 ## When to Use This Skill
 
@@ -14,6 +14,9 @@ This skill should be activated when the user:
 - **Explores a research domain**: "Give me an overview of type 1 diabetes", "Literature review on CRISPR", "I want to understand cancer immunotherapy"
 - **Searches for literature**: "Search PubMed for CRISPR", "Find papers about cancer immunotherapy", "Literature review on Alzheimer's biomarkers"
 - **Searches arXiv**: "Search arXiv for transformer attention", "Find arXiv papers on LLM memory", "arXiv papers about diffusion models"
+- **Searches bioRxiv/medRxiv**: "Search bioRxiv for CRISPR", "Find preprints about COVID-19 on medRxiv", "Recent bioRxiv papers on gene therapy"
+- **Reads bioRxiv papers**: "Read bioRxiv 10.1101/2024.01.15.575889", "Get preprint at biorxiv.org/content/10.1101/..."
+- **Gets bioRxiv full text**: "Get full text of bioRxiv preprint", "Read the full bioRxiv paper"
 - **Wants strategic literature search**: "Start with review articles on...", "Find reviews first then research papers", "What are the key papers on..."
 - **Reads specific articles**: "Read PMID 12345678", "Get abstract for this paper", "Show me the full text"
 - **Reads arXiv papers**: "Read arXiv 2602.04557", "Get the paper at arxiv.org/abs/2301.12345", "Show arXiv paper 1706.03762"
@@ -30,6 +33,8 @@ This skill should be activated when the user:
 **PubMed Search Keywords**: pubmed, search, find articles, papers, literature, biomedical, medical literature, scientific papers, research articles
 
 **arXiv Search Keywords**: arxiv, arXiv, preprint, preprints, cs.CL, cs.AI, cs.LG, cs.CV, machine learning papers, AI papers, deep learning papers, NLP papers, computer science papers, physics papers, math papers, quantitative biology
+
+**bioRxiv/medRxiv Search Keywords**: biorxiv, bioRxiv, medrxiv, medRxiv, preprint, preprints, 10.1101, biology preprint, medical preprint, life sciences preprint, COVID preprint, gene therapy preprint
 
 **Action Keywords**: read, get, fetch, abstract, full text, summary, extract, download
 
@@ -127,6 +132,12 @@ This skill uses three complementary APIs:
    - Retrieve paper metadata, abstracts, and categories via Atom XML
    - HTML full text at https://arxiv.org/html/{id} (LaTeXML-rendered papers)
 
+4. **bioRxiv/medRxiv API** (https://api.biorxiv.org)
+   - Same API serves both bioRxiv and medRxiv using `server` parameter
+   - DOI-based metadata retrieval via `/details/[server]/[DOI]/na/json`
+   - Date-based browsing via `/details/[server]/[start_date]/[end_date]/[cursor]/json`
+   - Full text via JATS XML or HTML at `biorxiv.org/content/[DOI].full`
+
 ### Data Flow
 
 ```
@@ -202,6 +213,22 @@ The arXiv API provides free access to metadata and abstracts for over 2 million 
 
 **arXiv HTML Full Text**: `https://arxiv.org/html/{id}` - LaTeXML-rendered HTML (not all papers)
 
+### bioRxiv/medRxiv API
+
+**Details Endpoint**: `https://api.biorxiv.org/details/[server]/[DOI]/na/json`
+- `server`: "biorxiv" or "medrxiv"
+- `DOI`: Full DOI (e.g., 10.1101/2024.01.15.575889)
+
+**Browse Endpoint**: `https://api.biorxiv.org/details/[server]/[start_date]/[end_date]/[cursor]/json`
+- Returns 100 papers per page
+- Use cursor for pagination
+
+**DOI Formats**:
+- Legacy: `10.1101/YYYY.MM.DD.XXXXXX`
+- New: `10.64898/YYYY.MM.DD.XXXXXX`
+
+**Full Text**: JATS XML via `jatsxml` field, HTML at `biorxiv.org/content/[DOI].full`
+
 ### Rate Limits
 
 **NCBI E-utilities**:
@@ -221,6 +248,14 @@ The arXiv API provides free access to metadata and abstracts for over 2 million 
 | Request interval | 1 request per 3 seconds minimum |
 | Max results per request | 2000 |
 | Max total results | 30000 (across pagination) |
+| Authentication | None required |
+
+**bioRxiv/medRxiv API**:
+
+| Rule | Limit |
+|------|-------|
+| Request interval | No documented limit (use reasonable delays) |
+| Results per page | 100 |
 | Authentication | None required |
 
 ## Workflows
@@ -663,6 +698,133 @@ print(result['sections']['Introduction'])
 
 **Note**: Not all arXiv papers have HTML versions. Only papers processed by the LaTeXML pipeline are available. If HTML is not available, the user will be directed to the PDF.
 
+### Workflow 11: Search bioRxiv/medRxiv for Preprints
+
+**User says**: "Search bioRxiv for CRISPR", "Find medRxiv preprints about COVID-19"
+
+**Process**:
+1. Parse search query and extract terms
+2. Call `search_biorxiv()` from `scripts/search_biorxiv.py`
+3. Format results with bioRxiv citation format
+
+**Example query**:
+```python
+from search_biorxiv import search_biorxiv, browse_biorxiv_recent
+
+# Website search
+results = search_biorxiv("CRISPR gene editing", max_results=10)
+
+# Search medRxiv
+results = search_biorxiv("COVID-19 vaccine", max_results=10, server="medrxiv")
+
+# Browse recent papers
+results = browse_biorxiv_recent(days=7, server="biorxiv", max_results=20)
+```
+
+**Output format**:
+```
+## bioRxiv Search Results: "CRISPR gene editing"
+
+Found 1,234 preprints. Showing 10:
+
+1. Smith J, Jones M, et al. Novel CRISPR delivery systems for in vivo editing. bioRxiv. 2024. doi:10.1101/2024.01.15.575889. [Preprint]. [Genetics].
+   Abstract: We developed a novel delivery system for...
+
+2. Chen L, Wang X, et al. CRISPR-based gene therapy advances. bioRxiv. 2024. doi:10.1101/2024.01.10.573456. [Preprint]. [Molecular Biology].
+   Abstract: Recent advances in...
+```
+
+### Workflow 12: Read bioRxiv/medRxiv Paper
+
+**User says**: "Read bioRxiv 10.1101/2024.01.15.575889", "Get preprint at biorxiv.org/content/10.1101/..."
+
+**Process**:
+1. Extract and validate bioRxiv/medRxiv DOI
+2. Call `fetch_biorxiv_paper()` from `scripts/fetch_biorxiv.py`
+3. Format as structured reference with abstract
+
+**Example query**:
+```python
+from fetch_biorxiv import fetch_biorxiv_paper, batch_fetch_biorxiv
+
+# Fetch single paper
+result = fetch_biorxiv_paper("10.1101/2024.01.15.575889")
+# Also accepts URLs: fetch_biorxiv_paper("https://www.biorxiv.org/content/10.1101/...")
+
+# Batch fetch
+results = batch_fetch_biorxiv(["10.1101/2024.01.15.575889", "10.1101/2024.01.10.573456"])
+```
+
+**Output format**:
+```
+## bioRxiv Preprint: 10.1101/2024.01.15.575889
+
+**Reference**: Smith J, Jones M, et al. Paper Title Here. bioRxiv. 2024. doi:10.1101/2024.01.15.575889. [Preprint]. [Genetics].
+
+**Abstract**:
+[Full abstract text...]
+
+**Category**: Genetics
+**Version**: 2
+**License**: CC-BY-NC-ND 4.0
+**PDF**: https://www.biorxiv.org/content/10.1101/2024.01.15.575889.full.pdf
+**Page**: https://www.biorxiv.org/content/10.1101/2024.01.15.575889
+```
+
+### Workflow 13: Get bioRxiv/medRxiv Full Text
+
+**User says**: "Get full text of bioRxiv preprint 10.1101/2024.01.15.575889", "Read the full bioRxiv paper"
+
+**Process**:
+1. Extract and validate bioRxiv/medRxiv DOI
+2. Fetch JATS XML or HTML full text
+3. Parse structure to extract sections, figures, references
+4. Return structured full text
+
+**Example query**:
+```python
+from fetch_biorxiv_fulltext import get_biorxiv_fulltext, check_fulltext_availability
+
+# Check availability
+avail = check_fulltext_availability("10.1101/2024.01.15.575889")
+
+# Get full text (tries JATS XML first, then HTML)
+result = get_biorxiv_fulltext("10.1101/2024.01.15.575889")
+print(result['sections']['Introduction'])
+```
+
+**Output format**:
+```
+## Full Text: bioRxiv:10.1101/2024.01.15.575889
+
+**Title**: Paper Title Here
+**Word Count**: 8,500 words
+**Format**: JATS
+
+### Abstract
+[Abstract text...]
+
+### Introduction
+[Introduction text...]
+
+### Materials and Methods
+[Methods text...]
+
+### Results
+[Results text...]
+
+### Discussion
+[Discussion text...]
+
+### Figures (5 total)
+- fig1: Overview of the experimental design...
+- fig2: Results of gene expression analysis...
+
+### References (42 total)
+- First reference...
+- Second reference...
+```
+
 ## Available Scripts
 
 ### Core Scripts
@@ -859,6 +1021,54 @@ fulltext = get_arxiv_fulltext("2602.04557v1")
 - `get_arxiv_fulltext(arxiv_id)` - Retrieve and parse HTML full text
 - `format_arxiv_fulltext(result, max_words)` - Format for display
 
+#### `scripts/search_biorxiv.py`
+Search bioRxiv/medRxiv for preprints.
+
+```python
+from search_biorxiv import search_biorxiv, browse_biorxiv_recent
+
+# Website search
+results = search_biorxiv("CRISPR", max_results=10)
+
+# Browse recent papers
+results = browse_biorxiv_recent(days=7, server="medrxiv")
+```
+
+**Functions**:
+- `search_biorxiv(query, max_results, server, sort_by)` - Website search
+- `browse_biorxiv_recent(days, server, category, max_results)` - API date browsing
+- `format_biorxiv_search_results(results)` - Format for display
+
+#### `scripts/fetch_biorxiv.py`
+Fetch bioRxiv/medRxiv paper metadata and abstracts by DOI.
+
+```python
+from fetch_biorxiv import fetch_biorxiv_paper, batch_fetch_biorxiv
+
+paper = fetch_biorxiv_paper("10.1101/2024.01.15.575889")
+batch = batch_fetch_biorxiv(["10.1101/...", "10.1101/..."])
+```
+
+**Functions**:
+- `fetch_biorxiv_paper(doi, server)` - Get paper metadata and abstract
+- `batch_fetch_biorxiv(dois, server)` - Fetch multiple papers
+- `format_biorxiv_paper(article)` - Format for display
+
+#### `scripts/fetch_biorxiv_fulltext.py`
+Retrieve full text from bioRxiv/medRxiv via JATS XML or HTML.
+
+```python
+from fetch_biorxiv_fulltext import get_biorxiv_fulltext, check_fulltext_availability
+
+avail = check_fulltext_availability("10.1101/2024.01.15.575889")
+fulltext = get_biorxiv_fulltext("10.1101/2024.01.15.575889")
+```
+
+**Functions**:
+- `check_fulltext_availability(doi, server)` - Check full text availability
+- `get_biorxiv_fulltext(doi, server, prefer_jats)` - Retrieve and parse full text
+- `format_biorxiv_fulltext(result, max_words)` - Format for display
+
 ### Utility Scripts
 
 #### `scripts/utils/helpers.py`
@@ -869,6 +1079,9 @@ Common utilities for date handling, ID validation, and formatting.
 - `validate_pmcid(pmcid)` - Validate PMC ID format
 - `validate_arxiv_id(arxiv_id)` - Validate arXiv ID format
 - `extract_arxiv_id_from_text(text)` - Extract arXiv IDs from text
+- `validate_biorxiv_doi(doi)` - Validate bioRxiv/medRxiv DOI format
+- `extract_biorxiv_doi_from_text(text)` - Extract bioRxiv/medRxiv DOIs from text
+- `format_biorxiv_citation(article, style)` - Format bioRxiv/medRxiv citation
 - `format_authors(author_list)` - Format author names
 - `format_citation(article, style)` - Format NLM/Vancouver citation
 - `format_arxiv_citation(article, style)` - Format arXiv citation
@@ -1263,6 +1476,65 @@ Response:
 - Vaswani A, et al. Attention Is All You Need. NeurIPS 2017.
 - Devlin J, et al. BERT: Pre-training of Deep Bidirectional Transformers. NAACL 2019.
 - ...and 40 more
+```
+
+### Example 9: Search bioRxiv
+
+```
+User: "Search bioRxiv for CRISPR delivery systems"
+
+Response:
+## bioRxiv Search Results: "CRISPR delivery systems"
+
+Found 456 preprints. Showing 10:
+
+1. Smith J, Jones M, et al. Novel lipid nanoparticle delivery of CRISPR-Cas9 for in vivo gene editing. bioRxiv. 2024. doi:10.1101/2024.01.15.575889. [Preprint]. [Genetics].
+   Abstract: We developed a novel lipid nanoparticle formulation for efficient delivery...
+
+2. Chen X, Wang Y, et al. AAV-mediated CRISPR delivery to the central nervous system. bioRxiv. 2024. doi:10.1101/2024.01.10.573456. [Preprint]. [Neuroscience].
+   Abstract: Adeno-associated virus vectors provide a promising approach...
+
+[...]
+```
+
+### Example 10: Read bioRxiv Preprint
+
+```
+User: "Read bioRxiv 10.1101/2024.01.15.575889"
+
+Response:
+## bioRxiv Preprint: 10.1101/2024.01.15.575889
+
+**Reference**: Smith J, Jones M, Wilson K, et al. Novel lipid nanoparticle delivery of CRISPR-Cas9 for in vivo gene editing. bioRxiv. 2024. doi:10.1101/2024.01.15.575889. [Preprint]. [Genetics].
+
+**Abstract**:
+We developed a novel lipid nanoparticle formulation for efficient delivery of CRISPR-Cas9 components to target tissues in vivo. Our approach achieves [...]
+
+**Category**: Genetics
+**Version**: 2
+**License**: CC-BY-NC-ND 4.0
+
+**PDF**: https://www.biorxiv.org/content/10.1101/2024.01.15.575889.full.pdf
+**Page**: https://www.biorxiv.org/content/10.1101/2024.01.15.575889
+```
+
+### Example 11: Browse Recent medRxiv Preprints
+
+```
+User: "Show me recent COVID-19 preprints on medRxiv from the last week"
+
+Response:
+## Recent medRxiv Preprints
+
+Last 7 days. Showing 20 of 156:
+
+1. Author A, Author B, et al. Long-term immune responses following mRNA vaccination. medRxiv. 2024. doi:10.1101/2024.02.01.578123. [Preprint]. [Infectious Diseases].
+   Abstract: We analyzed long-term antibody levels in a cohort of 5,000 individuals...
+
+2. Author C, Author D, et al. Effectiveness of updated boosters against emerging variants. medRxiv. 2024. doi:10.1101/2024.01.30.577456. [Preprint]. [Epidemiology].
+   Abstract: Using data from a national surveillance program...
+
+[...]
 ```
 
 ## Advanced Features

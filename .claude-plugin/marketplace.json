@@ -5,15 +5,15 @@
     "email": "noreply@example.com"
   },
   "metadata": {
-    "description": "PubMed & arXiv reader and literature explorer for scientists - search articles and preprints, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature and arXiv preprints using NCBI E-utilities, BioC PMC, and arXiv APIs",
-    "version": "1.3.0",
+    "description": "PubMed, arXiv, bioRxiv & medRxiv reader and literature explorer for scientists - search articles and preprints, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature and preprints using NCBI E-utilities, BioC PMC, arXiv, and bioRxiv/medRxiv APIs",
+    "version": "1.4.0",
     "created": "2026-02-04",
     "updated": "2026-02-05"
   },
   "plugins": [
     {
       "name": "pubmed-reader-plugin",
-      "description": "PubMed & arXiv reader and literature explorer for scientists - search articles and preprints, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature and arXiv preprints using NCBI E-utilities, BioC PMC, and arXiv APIs",
+      "description": "PubMed, arXiv, bioRxiv & medRxiv reader and literature explorer for scientists - search articles and preprints, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature and preprints using NCBI E-utilities, BioC PMC, arXiv, and bioRxiv/medRxiv APIs",
       "source": "./",
       "strict": false,
       "skills": ["./"]
@@ -42,10 +42,19 @@
       "find preprints",
       "cs.CL",
       "cs.AI",
-      "cs.LG"
+      "cs.LG",
+      "search biorxiv",
+      "biorxiv preprint",
+      "read biorxiv",
+      "search medrxiv",
+      "medrxiv preprint",
+      "read medrxiv",
+      "10.1101",
+      "biology preprint",
+      "medical preprint"
     ],
     "patterns": [
-      "(?i)(search|find|look\\s+for)\\s+(pubmed|arxiv|papers?|articles?|literature|preprints?)\\s+(for|about|on)",
+      "(?i)(search|find|look\\s+for)\\s+(pubmed|arxiv|biorxiv|medrxiv|papers?|articles?|literature|preprints?)\\s+(for|about|on)",
       "(?i)(read|get|fetch|show)\\s+(abstract|full\\s+text|paper|article)\\s+(for\\s+)?pmid",
       "(?i)pmid\\s*[:#]?\\s*\\d+",
       "(?i)(similar|related)\\s+(articles?|papers?)\\s+(to|for)",
@@ -54,7 +63,11 @@
       "(?i)(biomedical|medical|scientific)\\s+literature\\s+(search|review)",
       "(?i)arxiv\\s*(:|id)?\\s*\\d{4}\\.\\d{4,5}",
       "(?i)(search|find|look\\s+for)\\s+arxiv\\s+(for|about|on)",
-      "(?i)(read|get|fetch|show)\\s+(arxiv|preprint)"
+      "(?i)(read|get|fetch|show)\\s+(arxiv|preprint)",
+      "(?i)(search|find|look\\s+for)\\s+(biorxiv|medrxiv)\\s+(for|about|on)",
+      "(?i)(read|get|fetch|show)\\s+(biorxiv|medrxiv)\\s+(preprint|paper)?",
+      "(?i)10\\.1101/\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d{6,8}",
+      "(?i)(bio|med)rxiv\\.org/content/10\\.1101"
     ]
   },
   "usage": {
@@ -69,7 +82,11 @@
       "User asks to search arXiv for preprints",
       "User mentions an arXiv ID or URL",
       "User wants to read arXiv papers or preprints",
-      "User asks about papers in cs.CL, cs.AI, cs.LG, or other arXiv categories"
+      "User asks about papers in cs.CL, cs.AI, cs.LG, or other arXiv categories",
+      "User asks to search bioRxiv or medRxiv for preprints",
+      "User mentions a bioRxiv/medRxiv DOI (10.1101/...)",
+      "User wants to read biology or medical preprints",
+      "User asks for recent preprints in biology or medicine"
     ],
     "when_not_to_use": [
       "User asks about non-scientific topics unrelated to PubMed or arXiv",
@@ -92,6 +109,11 @@
     "Search arXiv for LLM memory",
     "Read arXiv paper 2602.04557",
     "Get full text of arXiv 2602.04557v1",
-    "Find preprints about transformer architectures on arXiv"
+    "Find preprints about transformer architectures on arXiv",
+    "Search bioRxiv for CRISPR delivery",
+    "Read bioRxiv preprint 10.1101/2024.01.15.575889",
+    "Search medRxiv for COVID-19 vaccines",
+    "Get recent bioRxiv preprints on gene therapy",
+    "Get full text of bioRxiv 10.1101/2020.05.22.111161"
   ]
 }
