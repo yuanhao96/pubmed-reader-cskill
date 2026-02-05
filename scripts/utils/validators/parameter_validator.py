@@ -443,6 +443,66 @@ def validate_pmid_list(pmids: Any, param_name: str = "pmids",
     return validated
 
 
+def validate_arxiv_id_param(arxiv_id: Any, param_name: str = "arxiv_id") -> str:
+    """
+    Validate and normalize arXiv ID parameter.
+
+    Supports modern IDs (YYMM.NNNNN[vN]) and legacy IDs (archive/NNNNNNN[vN]).
+    Also accepts full arXiv URLs and arXiv: prefixed IDs.
+
+    Args:
+        arxiv_id: Value to validate
+        param_name: Name for error messages
+
+    Returns:
+        Normalized arXiv ID string
+
+    Raises:
+        ValidationError: If validation fails
+
+    Example:
+        >>> validate_arxiv_id_param("2602.04557v1")
+        "2602.04557v1"
+        >>> validate_arxiv_id_param("https://arxiv.org/abs/2602.04557v1")
+        "2602.04557v1"
+    """
+    if arxiv_id is None:
+        raise ValidationError(
+            f"{param_name} cannot be None",
+            param_name=param_name,
+            suggestion="Provide a valid arXiv ID (e.g., 2602.04557 or 2602.04557v1)"
+        )
+
+    id_str = str(arxiv_id).strip()
+
+    if not id_str:
+        raise ValidationError(
+            f"{param_name} cannot be empty",
+            param_name=param_name,
+            suggestion="Provide a valid arXiv ID"
+        )
+
+    # Remove URL prefixes
+    id_str = re.sub(r'^https?://(www\.)?arxiv\.org/(abs|html|pdf)/', '', id_str)
+    # Remove arXiv: prefix
+    id_str = re.sub(r'^arXiv:\s*', '', id_str, flags=re.IGNORECASE)
+    # Remove trailing .pdf
+    id_str = re.sub(r'\.pdf$', '', id_str)
+
+    # Validate format
+    modern_pattern = r'^\d{4}\.\d{4,5}(v\d+)?$'
+    legacy_pattern = r'^[a-z-]+/\d{7}(v\d+)?$'
+
+    if not (re.match(modern_pattern, id_str) or re.match(legacy_pattern, id_str)):
+        raise ValidationError(
+            f"Invalid arXiv ID format: '{arxiv_id}'",
+            param_name=param_name,
+            suggestion="arXiv ID should be YYMM.NNNNN[vN] (e.g., 2602.04557v1) or archive/NNNNNNN (e.g., hep-ex/0307015)"
+        )
+
+    return id_str
+
+
 # =============================================================================
 # Main (for testing)
 # =============================================================================

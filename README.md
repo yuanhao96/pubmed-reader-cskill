@@ -1,12 +1,14 @@
-# PubMed Reader - Biomedical Literature Explorer
+# PubMed & arXiv Reader - Scientific Literature Explorer
 
-A Claude Code skill for reading PubMed articles like a real biologist would - browsing pages, extracting information, following citations, and discovering related research.
+A Claude Code skill for reading PubMed and arXiv articles like a real scientist would - browsing pages, extracting information, following citations, and discovering related research.
 
 ## Features
 
 - **Search PubMed**: Find articles with complex queries, date filters, and field tags
-- **Read Abstracts**: Fetch complete article metadata, abstracts, and keywords
-- **Full Text Access**: Retrieve full text for ~3 million Open Access articles
+- **Search arXiv**: Find preprints with field prefixes (ti:, au:, abs:, cat:), sort by relevance or date
+- **Read Abstracts**: Fetch complete article metadata, abstracts, and keywords from PubMed or arXiv
+- **Full Text Access**: Retrieve full text for ~3 million PubMed Open Access articles
+- **arXiv Full Text**: Parse HTML full text from arXiv papers (LaTeXML-rendered)
 - **Citation Tracking**: Find papers that cite a given article
 - **Related Research**: Discover similar articles based on content and MeSH terms
 - **Comprehensive Reports**: Generate complete analysis combining all data sources

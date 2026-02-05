@@ -1,9 +1,58 @@
 # Changelog
 
-All notable changes to PubMed Reader skill will be documented here.
+All notable changes to PubMed & arXiv Reader skill will be documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
+
+## [1.3.0] - 2026-02-05
+
+### Added
+
+**arXiv Support:**
+- `search_arxiv()`: Search arXiv papers with field prefixes (ti:, au:, abs:, cat:, all:)
+- `build_arxiv_query()`: Build advanced arXiv queries with Boolean operators
+- `search_arxiv_by_category()`: Search within specific arXiv categories (cs.CL, cs.AI, etc.)
+- `fetch_arxiv_paper()`: Fetch paper metadata and abstract by arXiv ID
+- `batch_fetch_arxiv()`: Fetch multiple papers in one request
+- `get_arxiv_fulltext()`: Retrieve and parse HTML full text from arxiv.org/html/{id}
+- `check_html_availability()`: Check if HTML version exists for a paper
+- `format_arxiv_citation()`: Format arXiv papers in Vancouver-style references
+- `validate_arxiv_id()`: Validate arXiv ID format (modern YYMM.NNNNN and legacy)
+- `validate_arxiv_id_param()`: Parameter validator for arXiv IDs
+- `extract_arxiv_id_from_text()`: Extract arXiv IDs from text
+
+**New Scripts:**
+- `scripts/search_arxiv.py`: arXiv search via Atom API
+- `scripts/fetch_arxiv.py`: arXiv paper metadata/abstract retrieval
+- `scripts/fetch_arxiv_fulltext.py`: arXiv HTML full text parsing
+
+**New Workflows in SKILL.md:**
+- Workflow 8: Search arXiv for Papers
+- Workflow 9: Read arXiv Paper
+- Workflow 10: Get arXiv Full Text (HTML)
+
+**New Tests:**
+- 8 arXiv integration tests (search, fetch, batch, fulltext, query builder, validation)
+- Total test count: 24
+
+### Changed
+
+- Renamed skill from "PubMed Reader" to "PubMed & arXiv Reader"
+- Updated SKILL.md description to include arXiv capabilities
+- Updated activation keywords for arXiv triggers (arxiv, preprint, cs.CL, cs.AI, etc.)
+- Updated architecture overview to include arXiv API
+- Added arXiv rate limit documentation
+- Updated helpers.py with arXiv ID validation and citation formatting
+- Updated parameter_validator.py with arXiv ID validation
+
+### Data Coverage
+
+**arXiv:**
+- 2+ million preprints across all categories
+- Physics, Mathematics, Computer Science, Quantitative Biology, and more
+- HTML full text for LaTeXML-processed papers
+- No authentication required
 
 ## [1.0.0] - 2026-02-04
 

@@ -21,6 +21,9 @@ from strategic_literature_search import (
     quick_literature_overview,
     format_strategic_search_results
 )
+from search_arxiv import search_arxiv, build_arxiv_query
+from fetch_arxiv import fetch_arxiv_paper, batch_fetch_arxiv
+from fetch_arxiv_fulltext import get_arxiv_fulltext, check_html_availability
 
 
 def test_search_pubmed_basic():
@@ -428,10 +431,189 @@ def test_strategic_search_formatting():
         return False
 
 
+def test_search_arxiv_basic():
+    """Test basic arXiv search."""
+    print("\n Testing search_arxiv()...")
+
+    try:
+        result = search_arxiv("transformer attention", max_results=5)
+
+        assert result.get('success'), f"Search failed: {result.get('error')}"
+        assert result.get('count', 0) > 0, "No results found"
+        assert len(result.get('articles', [])) > 0, "No articles returned"
+
+        print(f"  Found {result['count']} papers")
+        print(f"  Returned {len(result['articles'])} results")
+
+        # Check article structure
+        article = result['articles'][0]
+        assert 'arxiv_id' in article, "Missing arxiv_id"
+        assert 'title' in article, "Missing title"
+        assert 'authors' in article, "Missing authors"
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_fetch_arxiv_paper():
+    """Test fetching arXiv paper metadata."""
+    print("\n Testing fetch_arxiv_paper()...")
+
+    try:
+        # Attention Is All You Need
+        result = fetch_arxiv_paper("1706.03762")
+
+        assert result.get('success'), f"Fetch failed: {result.get('error')}"
+        assert result.get('arxiv_id'), "No arxiv_id returned"
+        assert result.get('title'), "No title"
+        assert result.get('abstract'), "No abstract"
+        assert result.get('authors'), "No authors"
+
+        print(f"  Title: {result['title'][:50]}...")
+        print(f"  Authors: {len(result['authors'])} authors")
+        print(f"  Year: {result.get('year')}")
+        print(f"  Categories: {result.get('categories', [])[:3]}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_fetch_arxiv_from_url():
+    """Test fetching arXiv paper from URL."""
+    print("\n Testing fetch_arxiv_paper() with URL...")
+
+    try:
+        result = fetch_arxiv_paper("https://arxiv.org/abs/1706.03762v7")
+
+        assert result.get('success'), f"Fetch failed: {result.get('error')}"
+        assert '1706.03762' in result.get('arxiv_id', ''), "Wrong arxiv_id"
+
+        print(f"  arXiv ID: {result['arxiv_id']}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_batch_fetch_arxiv():
+    """Test batch fetching arXiv papers."""
+    print("\n Testing batch_fetch_arxiv()...")
+
+    try:
+        ids = ["1706.03762", "2005.14165"]
+        result = batch_fetch_arxiv(ids)
+
+        assert result.get('success'), "Batch fetch failed"
+
+        stats = result.get('stats', {})
+        print(f"  Requested: {stats.get('requested')}")
+        print(f"  Fetched: {stats.get('fetched')}")
+        print(f"  Failed: {stats.get('failed')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_check_arxiv_html_availability():
+    """Test checking arXiv HTML availability."""
+    print("\n Testing check_html_availability()...")
+
+    try:
+        result = check_html_availability("1706.03762")
+
+        print(f"  arXiv:1706.03762: Available={result.get('available')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_get_arxiv_fulltext():
+    """Test getting arXiv full text."""
+    print("\n Testing get_arxiv_fulltext()...")
+
+    try:
+        result = get_arxiv_fulltext("1706.03762")
+
+        if result.get('success'):
+            print(f"  Word count: {result.get('word_count', 0)}")
+            print(f"  Sections: {list(result.get('sections', {}).keys())[:5]}")
+            print(f"  Figures: {len(result.get('figures', []))}")
+            print(f"  References: {len(result.get('references', []))}")
+            return True
+        else:
+            # HTML not available for all papers
+            print(f"  HTML not available: {result.get('error', {}).get('message')}")
+            return True  # Not a failure
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_arxiv_query_builder():
+    """Test arXiv query builder."""
+    print("\n Testing build_arxiv_query()...")
+
+    try:
+        query = build_arxiv_query(
+            title="attention",
+            author="Vaswani",
+            category="cs.CL"
+        )
+
+        assert "ti:attention" in query, "title not in query"
+        assert "au:Vaswani" in query, "author not in query"
+        assert "cat:cs.CL" in query, "category not in query"
+
+        print(f"  Built query: {query}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_invalid_arxiv_id_handling():
+    """Test handling of invalid arXiv ID."""
+    print("\n Testing invalid arXiv ID handling...")
+
+    try:
+        result = fetch_arxiv_paper("invalid_id")
+
+        assert not result.get('success'), "Should have failed"
+        assert 'error' in result, "No error info"
+
+        print(f"  Error handled: {result['error'].get('code')}")
+        print(f"  Message: {result['error'].get('message')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
 def main():
     """Run all integration tests."""
     print("=" * 70)
-    print("INTEGRATION TESTS - PubMed Reader Skill")
+    print("INTEGRATION TESTS - PubMed & arXiv Reader Skill")
     print("=" * 70)
 
     tests = [
@@ -451,6 +633,14 @@ def main():
         ("Strategic Literature Search", test_strategic_literature_search),
         ("Quick Literature Overview", test_quick_literature_overview),
         ("Strategic Search Formatting", test_strategic_search_formatting),
+        ("arXiv Search (basic)", test_search_arxiv_basic),
+        ("arXiv Fetch Paper", test_fetch_arxiv_paper),
+        ("arXiv Fetch from URL", test_fetch_arxiv_from_url),
+        ("arXiv Batch Fetch", test_batch_fetch_arxiv),
+        ("arXiv HTML Availability", test_check_arxiv_html_availability),
+        ("arXiv Full Text", test_get_arxiv_fulltext),
+        ("arXiv Query Builder", test_arxiv_query_builder),
+        ("Invalid arXiv ID Handling", test_invalid_arxiv_id_handling),
     ]
 
     results = []

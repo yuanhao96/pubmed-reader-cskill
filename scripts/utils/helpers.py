@@ -498,6 +498,159 @@ def format_reference_list(articles: List[Dict[str, Any]],
 
 
 # =============================================================================
+# arXiv ID Validation
+# =============================================================================
+
+def validate_arxiv_id(arxiv_id: Any) -> Tuple[bool, Optional[str], Optional[str]]:
+    """
+    Validate arXiv paper ID format.
+
+    Supports modern IDs (YYMM.NNNNN[vN]) and legacy IDs (archive/NNNNNNN[vN]).
+
+    Args:
+        arxiv_id: Value to validate (string)
+
+    Returns:
+        Tuple of (is_valid, normalized_id, error_message)
+
+    Example:
+        >>> validate_arxiv_id("2602.04557v1")
+        (True, "2602.04557v1", None)
+        >>> validate_arxiv_id("hep-ex/0307015")
+        (True, "hep-ex/0307015", None)
+    """
+    if arxiv_id is None:
+        return False, None, "arXiv ID cannot be None"
+
+    id_str = str(arxiv_id).strip()
+
+    if not id_str:
+        return False, None, "arXiv ID cannot be empty"
+
+    # Remove URL prefixes
+    id_str = re.sub(r'^https?://(www\.)?arxiv\.org/(abs|html|pdf)/', '', id_str)
+    # Remove arXiv: prefix
+    id_str = re.sub(r'^arXiv:\s*', '', id_str, flags=re.IGNORECASE)
+
+    # Modern format: YYMM.NNNNN or YYMM.NNNNNvN
+    modern_pattern = r'^\d{4}\.\d{4,5}(v\d+)?$'
+    # Legacy format: archive/NNNNNNN or archive/NNNNNNNvN
+    legacy_pattern = r'^[a-z-]+/\d{7}(v\d+)?$'
+
+    if re.match(modern_pattern, id_str):
+        return True, id_str, None
+    elif re.match(legacy_pattern, id_str):
+        return True, id_str, None
+    else:
+        return False, None, "arXiv ID must be in format YYMM.NNNNN[vN] (e.g., 2602.04557v1) or archive/NNNNNNN (e.g., hep-ex/0307015)"
+
+
+def extract_arxiv_id_from_text(text: str) -> List[str]:
+    """
+    Extract arXiv IDs from text.
+
+    Args:
+        text: Text containing arXiv IDs
+
+    Returns:
+        List of extracted arXiv IDs
+
+    Example:
+        >>> extract_arxiv_id_from_text("See arXiv:2602.04557 and 2301.12345v2")
+        ["2602.04557", "2301.12345v2"]
+    """
+    patterns = [
+        r'arXiv:\s*(\d{4}\.\d{4,5}(?:v\d+)?)',
+        r'(?:^|\s)(\d{4}\.\d{4,5}(?:v\d+)?)(?:\s|$|[,;.])',
+        r'arxiv\.org/(?:abs|html|pdf)/(\d{4}\.\d{4,5}(?:v\d+)?)',
+        r'arxiv\.org/(?:abs|html|pdf)/([a-z-]+/\d{7}(?:v\d+)?)',
+    ]
+
+    ids = []
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        ids.extend(matches)
+
+    seen = set()
+    unique_ids = []
+    for aid in ids:
+        if aid not in seen:
+            seen.add(aid)
+            unique_ids.append(aid)
+
+    return unique_ids
+
+
+def format_arxiv_citation(article: Dict[str, Any], style: str = "vancouver") -> str:
+    """
+    Format arXiv article as a strictly formatted reference.
+
+    Args:
+        article: arXiv article metadata dict with keys: authors, title, arxiv_id,
+                 published, updated, categories, doi, journal_ref, comment
+        style: Citation style ("vancouver", "simple")
+
+    Returns:
+        Formatted reference string
+
+    Example:
+        Vancouver:
+            Vaswani A, Shazeer N, Parmar N, et al. Attention Is All You Need.
+            arXiv:1706.03762. 2017. doi:10.48550/arXiv.1706.03762.
+    """
+    authors = article.get('authors', [])
+    title = article.get('title', 'Untitled').rstrip('.')
+    arxiv_id = article.get('arxiv_id', '')
+    year = article.get('year', '')
+    doi = article.get('doi', '')
+    journal_ref = article.get('journal_ref', '')
+    categories = article.get('categories', [])
+
+    if style == "vancouver":
+        # Format authors for arXiv (often just name strings, not LastName/Initials dicts)
+        if authors and isinstance(authors[0], dict):
+            author_str = format_authors(authors, max_authors=6, style="short")
+        elif authors and isinstance(authors[0], str):
+            # arXiv authors are often plain strings
+            if len(authors) > 6:
+                author_str = ", ".join(authors[:6]) + ", et al."
+            else:
+                author_str = ", ".join(authors)
+        else:
+            author_str = "Unknown authors"
+
+        citation = f"{author_str}. {title}."
+
+        if journal_ref:
+            citation += f" {journal_ref}."
+
+        citation += f" arXiv:{arxiv_id}."
+
+        if year:
+            citation += f" {year}."
+
+        if doi:
+            citation += f" doi:{doi}."
+
+        primary_cat = categories[0] if categories else None
+        if primary_cat:
+            citation += f" [{primary_cat}]."
+
+        return citation
+
+    else:  # simple
+        if authors and isinstance(authors[0], str):
+            author_str = authors[0] + (" et al." if len(authors) > 1 else "")
+        elif authors and isinstance(authors[0], dict):
+            author_str = format_authors(authors, max_authors=3, style="short")
+        else:
+            author_str = "Unknown authors"
+
+        citation = f"{author_str} ({year}). {title}. arXiv:{arxiv_id}."
+        return citation
+
+
+# =============================================================================
 # Text Processing
 # =============================================================================
 

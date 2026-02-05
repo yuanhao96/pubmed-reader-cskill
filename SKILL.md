@@ -1,11 +1,11 @@
 ---
 name: pubmed-reader-cskill
-description: PubMed article reader and literature explorer for biologists - search articles, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature using NCBI E-utilities and BioC PMC APIs
+description: PubMed and arXiv article reader and literature explorer for scientists - search PubMed and arXiv, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical and scientific literature using NCBI E-utilities, BioC PMC, and arXiv APIs
 ---
 
-# PubMed Reader - Biomedical Literature Explorer
+# PubMed & arXiv Reader - Scientific Literature Explorer
 
-A comprehensive Claude Code skill for reading PubMed articles like a real biologist would - browsing pages, extracting information, following citations, and discovering related research through the biomedical literature network.
+A comprehensive Claude Code skill for reading PubMed and arXiv articles like a real scientist would - browsing pages, extracting information, following citations, and discovering related research through biomedical and scientific literature networks.
 
 ## When to Use This Skill
 
@@ -13,23 +13,29 @@ This skill should be activated when the user:
 
 - **Explores a research domain**: "Give me an overview of type 1 diabetes", "Literature review on CRISPR", "I want to understand cancer immunotherapy"
 - **Searches for literature**: "Search PubMed for CRISPR", "Find papers about cancer immunotherapy", "Literature review on Alzheimer's biomarkers"
+- **Searches arXiv**: "Search arXiv for transformer attention", "Find arXiv papers on LLM memory", "arXiv papers about diffusion models"
 - **Wants strategic literature search**: "Start with review articles on...", "Find reviews first then research papers", "What are the key papers on..."
 - **Reads specific articles**: "Read PMID 12345678", "Get abstract for this paper", "Show me the full text"
+- **Reads arXiv papers**: "Read arXiv 2602.04557", "Get the paper at arxiv.org/abs/2301.12345", "Show arXiv paper 1706.03762"
+- **Gets arXiv full text**: "Get full text of arXiv 2602.04557v1", "Read the full arXiv paper"
 - **Explores citations**: "What papers cite this?", "Find citing articles for PMID X", "Show references"
 - **Finds related work**: "Find similar papers", "Related articles to this study", "More papers like this"
 - **Mentions PMIDs or PMCIDs**: Any query containing "PMID", "PMC", or article identifiers
+- **Mentions arXiv IDs or URLs**: Any query containing "arXiv", arXiv IDs (YYMM.NNNNN), or arxiv.org URLs
 
 ### Keywords That Trigger Activation
 
 **Strategic Search Keywords**: literature overview, domain overview, understand the field, review articles first, seminal works, foundational papers, key papers, reading order, explore the literature
 
-**Search Keywords**: pubmed, search, find articles, papers, literature, biomedical, medical literature, scientific papers, research articles
+**PubMed Search Keywords**: pubmed, search, find articles, papers, literature, biomedical, medical literature, scientific papers, research articles
+
+**arXiv Search Keywords**: arxiv, arXiv, preprint, preprints, cs.CL, cs.AI, cs.LG, cs.CV, machine learning papers, AI papers, deep learning papers, NLP papers, computer science papers, physics papers, math papers, quantitative biology
 
 **Action Keywords**: read, get, fetch, abstract, full text, summary, extract, download
 
 **Exploration Keywords**: similar articles, related papers, citations, cited by, references, citing articles
 
-**Identifier Keywords**: PMID, PMC, PubMed ID, article ID, DOI
+**Identifier Keywords**: PMID, PMC, PubMed ID, article ID, DOI, arXiv ID, arxiv.org
 
 ## Mandatory Reference Formatting
 
@@ -103,9 +109,9 @@ Use `format_citation(article, style="vancouver")` from `scripts/utils/helpers.py
 
 ### Architecture Overview
 
-This skill uses two complementary APIs from NCBI:
+This skill uses three complementary APIs:
 
-1. **E-utilities API** (https://eutils.ncbi.nlm.nih.gov/entrez/eutils/)
+1. **NCBI E-utilities API** (https://eutils.ncbi.nlm.nih.gov/entrez/eutils/)
    - ESearch: Search PubMed with complex queries
    - EFetch: Retrieve article abstracts and metadata
    - ESummary: Get document summaries
@@ -116,6 +122,11 @@ This skill uses two complementary APIs from NCBI:
    - Full text retrieval for ~3 million Open Access articles
    - Structured XML/JSON with sections, paragraphs, figures
 
+3. **arXiv API** (https://export.arxiv.org/api/query)
+   - Search arXiv preprints with field prefixes (ti:, au:, abs:, cat:)
+   - Retrieve paper metadata, abstracts, and categories via Atom XML
+   - HTML full text at https://arxiv.org/html/{id} (LaTeXML-rendered papers)
+
 ### Data Flow
 
 ```
@@ -123,18 +134,12 @@ User Query
     │
     ▼
 ┌─────────────────┐
-│  Query Parser   │ ──▶ Detect intent (search/read/explore)
+│  Query Parser   │ ──▶ Detect intent + source (PubMed/arXiv)
 └─────────────────┘
     │
-    ▼
-┌─────────────────┐
-│  E-utilities    │ ──▶ ESearch, EFetch, ELink, ESummary
-└─────────────────┘
+    ├──▶ PubMed queries ──▶ E-utilities + BioC API
     │
-    ▼
-┌─────────────────┐
-│  BioC API       │ ──▶ Full text for Open Access articles
-└─────────────────┘
+    └──▶ arXiv queries  ──▶ arXiv Atom API + HTML full text
     │
     ▼
 ┌─────────────────┐
@@ -179,7 +184,27 @@ https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_[format]/[ID
 - `ID`: PMID (e.g., 17299597) or PMC ID (e.g., PMC1790863)
 - `encoding`: `unicode` or `ascii`
 
-### Rate Limits and API Key
+### arXiv API
+
+The arXiv API provides free access to metadata and abstracts for over 2 million preprints across physics, mathematics, computer science, quantitative biology, and more.
+
+**Search Endpoint**: `https://export.arxiv.org/api/query`
+
+**Parameters**:
+- `search_query`: Search terms with field prefixes (ti:, au:, abs:, cat:, all:)
+- `id_list`: Comma-separated arXiv IDs for direct lookup
+- `start`: Pagination offset (0-based)
+- `max_results`: Results per page (max 2000)
+- `sortBy`: `relevance`, `lastUpdatedDate`, `submittedDate`
+- `sortOrder`: `ascending`, `descending`
+
+**Field Prefixes**: `ti:` (title), `au:` (author), `abs:` (abstract), `cat:` (category), `all:` (all fields)
+
+**arXiv HTML Full Text**: `https://arxiv.org/html/{id}` - LaTeXML-rendered HTML (not all papers)
+
+### Rate Limits
+
+**NCBI E-utilities**:
 
 | Access Level | Rate Limit | Requirements |
 |--------------|------------|--------------|
@@ -188,6 +213,15 @@ https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_[format]/[ID
 | Enhanced | Custom | Contact NCBI |
 
 **Get your API key**: https://www.ncbi.nlm.nih.gov/account/settings/
+
+**arXiv API**:
+
+| Rule | Limit |
+|------|-------|
+| Request interval | 1 request per 3 seconds minimum |
+| Max results per request | 2000 |
+| Max total results | 30000 (across pagination) |
+| Authentication | None required |
 
 ## Workflows
 
@@ -504,6 +538,131 @@ Key themes: autoimmunity, beta cells, genetics. Most cited foundational work:
 - **Keywords/MeSH**: [List]
 ```
 
+### Workflow 8: Search arXiv for Papers
+
+**User says**: "Search arXiv for LLM memory", "Find arXiv papers about diffusion models"
+
+**Process**:
+1. Parse search query and extract terms
+2. Build arXiv API query with field prefixes (all:, ti:, au:, cat:)
+3. Call `search_arxiv()` from `scripts/search_arxiv.py`
+4. Format results with arXiv citation format
+
+**Example query**:
+```python
+from search_arxiv import search_arxiv, build_arxiv_query
+
+# Basic search
+results = search_arxiv("LLM memory", max_results=10)
+
+# Advanced search with category filter
+results = search_arxiv("ti:attention AND au:Vaswani", category="cs.CL", max_results=10)
+
+# Category search
+from search_arxiv import search_arxiv_by_category
+results = search_arxiv_by_category("cs.AI", "reasoning", max_results=10)
+```
+
+**Output format**:
+```
+## arXiv Search Results: "LLM memory"
+
+Found 1,234 papers. Showing 10:
+
+1. Smith A, Jones B, et al. Memory-Augmented Language Models for Long-Context Understanding. arXiv:2501.12345. 2025. [cs.CL].
+   Abstract: We propose a novel memory architecture...
+
+2. Chen X, Wang Y, et al. Efficient Long-Term Memory in Transformers. arXiv:2412.67890. 2024. [cs.LG].
+   Abstract: This paper introduces...
+```
+
+### Workflow 9: Read arXiv Paper
+
+**User says**: "Read arXiv 2602.04557", "Get arXiv paper 1706.03762"
+
+**Process**:
+1. Extract and validate arXiv ID
+2. Call `fetch_arxiv_paper()` from `scripts/fetch_arxiv.py`
+3. Format as structured reference with abstract
+
+**Example query**:
+```python
+from fetch_arxiv import fetch_arxiv_paper
+
+result = fetch_arxiv_paper("2602.04557v1")
+# Also accepts URLs: fetch_arxiv_paper("https://arxiv.org/abs/2602.04557v1")
+```
+
+**Output format**:
+```
+## arXiv Paper: 2602.04557v1
+
+**Reference**: Smith A, Jones B, et al. Paper Title Here. arXiv:2602.04557v1. 2026. [cs.CL].
+
+**Abstract**:
+[Full abstract text...]
+
+**Categories**: cs.CL, cs.AI
+**Comment**: 15 pages, 8 figures, accepted at ACL 2026
+**PDF**: https://arxiv.org/pdf/2602.04557v1
+**HTML**: https://arxiv.org/html/2602.04557v1
+```
+
+### Workflow 10: Get arXiv Full Text (HTML)
+
+**User says**: "Get full text of arXiv 2602.04557v1", "Read the full paper from arxiv.org/html/2602.04557v1"
+
+**Process**:
+1. Extract and validate arXiv ID
+2. Fetch HTML from https://arxiv.org/html/{id}
+3. Parse LaTeXML structure to extract sections, figures, references
+4. Return structured full text
+
+**Example query**:
+```python
+from fetch_arxiv_fulltext import get_arxiv_fulltext, check_html_availability
+
+# Check if HTML is available
+avail = check_html_availability("2602.04557v1")
+
+# Get full text
+result = get_arxiv_fulltext("2602.04557v1")
+print(result['sections']['Introduction'])
+```
+
+**Output format**:
+```
+## Full Text: arXiv:2602.04557v1
+
+**Title**: Paper Title Here
+**Word Count**: 8,500 words
+
+### Abstract
+[Abstract text...]
+
+### Introduction
+[Introduction text...]
+
+### Methods
+[Methods text...]
+
+### Results
+[Results text...]
+
+### Conclusion
+[Conclusion text...]
+
+### Figures (5 total)
+- fig1: Caption for figure 1
+- fig2: Caption for figure 2
+
+### References (42 total)
+- First reference...
+- Second reference...
+```
+
+**Note**: Not all arXiv papers have HTML versions. Only papers processed by the LaTeXML pipeline are available. If HTML is not available, the user will be directed to the PDF.
+
 ## Available Scripts
 
 ### Core Scripts
@@ -651,6 +810,55 @@ deep = deep_literature_analysis(
 4. Phase 4: Identify seminal/highly-cited foundational papers
 5. Generate optimal reading order
 
+#### `scripts/search_arxiv.py`
+Search arXiv for preprints and scientific papers.
+
+```python
+from search_arxiv import search_arxiv, build_arxiv_query
+
+# Basic search
+results = search_arxiv("LLM memory", max_results=10)
+
+# With category filter
+results = search_arxiv("attention mechanism", category="cs.CL", max_results=10)
+```
+
+**Functions**:
+- `search_arxiv(query, max_results, start, sort_by, sort_order, category)` - Main search
+- `build_arxiv_query(terms, title, author, abstract, category)` - Build advanced query
+- `search_arxiv_by_category(category, query, max_results)` - Search within category
+- `format_arxiv_search_results(results)` - Format for display
+
+#### `scripts/fetch_arxiv.py`
+Fetch arXiv paper metadata and abstracts by ID.
+
+```python
+from fetch_arxiv import fetch_arxiv_paper, batch_fetch_arxiv
+
+paper = fetch_arxiv_paper("1706.03762")
+batch = batch_fetch_arxiv(["1706.03762", "2005.14165"])
+```
+
+**Functions**:
+- `fetch_arxiv_paper(arxiv_id)` - Get paper metadata and abstract
+- `batch_fetch_arxiv(arxiv_ids)` - Fetch multiple papers
+- `format_arxiv_paper(article)` - Format for display
+
+#### `scripts/fetch_arxiv_fulltext.py`
+Retrieve full text from arXiv HTML versions (LaTeXML-rendered papers).
+
+```python
+from fetch_arxiv_fulltext import get_arxiv_fulltext, check_html_availability
+
+avail = check_html_availability("2602.04557v1")
+fulltext = get_arxiv_fulltext("2602.04557v1")
+```
+
+**Functions**:
+- `check_html_availability(arxiv_id)` - Check if HTML version exists
+- `get_arxiv_fulltext(arxiv_id)` - Retrieve and parse HTML full text
+- `format_arxiv_fulltext(result, max_words)` - Format for display
+
 ### Utility Scripts
 
 #### `scripts/utils/helpers.py`
@@ -659,7 +867,11 @@ Common utilities for date handling, ID validation, and formatting.
 **Functions**:
 - `validate_pmid(pmid)` - Validate PMID format
 - `validate_pmcid(pmcid)` - Validate PMC ID format
+- `validate_arxiv_id(arxiv_id)` - Validate arXiv ID format
+- `extract_arxiv_id_from_text(text)` - Extract arXiv IDs from text
 - `format_authors(author_list)` - Format author names
+- `format_citation(article, style)` - Format NLM/Vancouver citation
+- `format_arxiv_citation(article, style)` - Format arXiv citation
 - `format_date(date_dict)` - Format publication dates
 - `extract_year(date_string)` - Extract year from various formats
 
@@ -975,6 +1187,82 @@ Walsh EE, Frenck RW Jr, Falsey AR, et al. Safety and immunogenicity of two RNA-b
 ### Full Text Access
 - PMC Available: Yes (PMC7889054)
 - Access: Open Access
+```
+
+### Example 6: Search arXiv
+
+```
+User: "Search arXiv for LLM memory augmentation"
+
+Response:
+## arXiv Search Results: "LLM memory augmentation"
+
+Found 456 papers. Showing 10:
+
+1. Smith A, Jones B, et al. Memory-Augmented Language Models for Long-Context Understanding. arXiv:2501.12345. 2025. [cs.CL].
+   Abstract: We propose a novel memory architecture that enables language models to...
+
+2. Chen X, Wang Y, et al. Efficient Long-Term Memory in Transformers via Retrieval. arXiv:2412.67890. 2024. [cs.LG].
+   Abstract: This paper introduces a retrieval-based approach to...
+
+[...]
+```
+
+### Example 7: Read arXiv Paper
+
+```
+User: "Read arXiv 1706.03762"
+
+Response:
+## arXiv Paper: 1706.03762v7
+
+**Reference**: Vaswani A, Shazeer N, Parmar N, et al. Attention Is All You Need. arXiv:1706.03762. 2017. [cs.CL].
+
+**Abstract**:
+The dominant sequence transduction models are based on complex recurrent or
+convolutional neural networks that include an encoder and a decoder...
+
+**Categories**: cs.CL, cs.AI
+**Comment**: 15 pages, 5 figures
+**Published in**: Advances in Neural Information Processing Systems 30 (NIPS 2017)
+**PDF**: https://arxiv.org/pdf/1706.03762
+**HTML**: https://arxiv.org/html/1706.03762
+```
+
+### Example 8: Get arXiv Full Text
+
+```
+User: "Get full text of arXiv 2602.04557v1"
+
+Response:
+## Full Text: arXiv:2602.04557v1
+
+**Title**: Paper Title Here
+**Word Count**: 8,500 words
+
+### Abstract
+[Full abstract...]
+
+### Introduction
+[Full introduction text...]
+
+### Methods
+[Full methods text...]
+
+### Results
+[Full results text...]
+
+### Conclusion
+[Full conclusion text...]
+
+### Figures (5 total)
+- fig1: Architecture overview showing the model pipeline...
+- fig2: Comparison of performance across benchmarks...
+
+### References (42 total)
+- Vaswani A, et al. Attention Is All You Need. NeurIPS 2017.
+- Devlin J, et al. BERT: Pre-training of Deep Bidirectional Transformers. NAACL 2019.
+- ...and 40 more
 ```
 
 ## Advanced Features
