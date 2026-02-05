@@ -31,6 +31,74 @@ This skill should be activated when the user:
 
 **Identifier Keywords**: PMID, PMC, PubMed ID, article ID, DOI
 
+## Mandatory Reference Formatting
+
+**CRITICAL: When citing articles in any output, Claude MUST use strictly formatted NLM/Vancouver-style references.** This is the standard format used by PubMed, MEDLINE, and biomedical journals worldwide.
+
+### Standard Reference Format (NLM/Vancouver)
+
+Every article mentioned in the output MUST be cited using this exact format:
+
+```
+AuthorLastName Initials, Author2 Initials, et al. Article title. Journal Name. Year;Volume(Issue):Pages. doi:DOI. PMID: XXXXXXXX.
+```
+
+**Complete example:**
+```
+Walsh EE, Frenck RW Jr, Falsey AR, et al. Safety and immunogenicity of two RNA-based COVID-19 vaccine candidates. N Engl J Med. 2020;383(25):2439-2450. doi:10.1056/NEJMoa2027906. PMID: 32756549.
+```
+
+### Formatting Rules
+
+1. **Authors**: Last name followed by initials (no periods), separated by commas. Use "et al." after 6 authors.
+2. **Title**: Full article title, ending with a period.
+3. **Journal**: Use standard journal abbreviation or full name, followed by a period.
+4. **Year/Volume/Pages**: Year immediately followed by semicolon, volume, issue in parentheses, colon, and page range. End with period.
+5. **DOI**: Prefix with "doi:" — include when available.
+6. **PMID**: Always include as "PMID: XXXXXXXX." at the end.
+7. **PMC**: If full text is available, append "PMCXXXXXXX." after PMID.
+
+### When to Apply This Format
+
+- **Search results**: Each article in search results must include a formatted reference line
+- **Article reads**: The article header must include the full formatted reference
+- **Citation lists**: All citing/cited articles must use this format
+- **Similar articles**: Each similar article must include a formatted reference
+- **Strategic literature searches**: All articles in reviews, research, and seminal works sections
+- **Comprehensive reports**: All referenced articles throughout the report
+
+### Output Template for Article Listings
+
+When listing multiple articles (search results, citations, similar articles), use:
+
+```
+1. AuthorLastName Initials, et al. Title. Journal. Year;Vol(Issue):Pages. doi:DOI. PMID: XXXXX.
+
+2. AuthorLastName Initials, et al. Title. Journal. Year;Vol(Issue):Pages. doi:DOI. PMID: XXXXX.
+```
+
+### Output Template for Single Article Read
+
+When displaying a single article's details:
+
+```
+## Article: PMID XXXXXXXX
+
+**Reference**: AuthorLastName Initials, et al. Title. Journal. Year;Vol(Issue):Pages. doi:DOI. PMID: XXXXX.
+
+**Abstract**:
+[Abstract text...]
+
+**Keywords**: [keywords]
+**MeSH Terms**: [terms]
+```
+
+### Helper Functions
+
+Use `format_citation(article, style="vancouver")` from `scripts/utils/helpers.py` to generate properly formatted references. Use `format_reference_list(articles, style="vancouver")` to format a list of articles.
+
+---
+
 ## How It Works
 
 ### Architecture Overview
@@ -147,15 +215,9 @@ esearch.fcgi?db=pubmed&term=CRISPR+gene+editing&mindate=2024/01/01&maxdate=2024/
 
 Found 1,234 articles. Showing top 20:
 
-1. **CRISPR-Cas9 advances in cancer therapy** (2024)
-   Authors: Smith J, Jones M, et al.
-   Journal: Nature Medicine
-   PMID: 38123456
+1. Smith J, Jones M, Wilson K, et al. CRISPR-Cas9 advances in cancer therapy. Nat Med. 2024;30(3):456-467. doi:10.1038/s41591-024-12345-6. PMID: 38123456.
 
-2. **Novel CRISPR delivery systems for in vivo editing** (2024)
-   Authors: Chen L, Wang X, et al.
-   Journal: Cell
-   PMID: 38234567
+2. Chen L, Wang X, Zhang Y, et al. Novel CRISPR delivery systems for in vivo editing. Cell. 2024;187(5):1102-1118. doi:10.1016/j.cell.2024.01.012. PMID: 38234567.
 
 [...]
 ```
@@ -182,13 +244,7 @@ efetch.fcgi?db=pubmed&id=38123456&rettype=abstract&retmode=xml
 ```
 ## Article: PMID 38123456
 
-**Title**: CRISPR-Cas9 advances in cancer therapy
-
-**Authors**: Smith J, Jones M, Wilson K, et al.
-
-**Journal**: Nature Medicine, 2024 Mar;30(3):456-467
-
-**DOI**: 10.1038/s41591-024-12345-6
+**Reference**: Smith J, Jones M, Wilson K, et al. CRISPR-Cas9 advances in cancer therapy. Nat Med. 2024;30(3):456-467. doi:10.1038/s41591-024-12345-6. PMID: 38123456.
 
 **Abstract**:
 Recent advances in CRISPR-Cas9 technology have revolutionized
@@ -197,6 +253,8 @@ cancer therapy approaches. This review examines [...]
 **Keywords**: CRISPR, gene editing, cancer therapy, immunotherapy
 
 **MeSH Terms**: CRISPR-Cas Systems, Neoplasms/therapy, Gene Editing
+
+**Full Text**: Available (PMC7889054)
 ```
 
 ### Workflow 3: Get Full Text (Open Access)
@@ -265,13 +323,9 @@ elink.fcgi?dbfrom=pubmed&db=pubmed&id=20210808&cmd=neighbor_score&linkname=pubme
 
 Based on shared MeSH terms, citations, and content similarity:
 
-1. **[Title]** (Score: 95/100)
-   PMID: 21234567
-   Journal: Cell, 2021
+1. (Score: 95) Author1 AB, Author2 CD, et al. Article title here. Cell. 2021;184(12):3100-3115. doi:10.1016/j.cell.2021.03.001. PMID: 21234567.
 
-2. **[Title]** (Score: 89/100)
-   PMID: 20345678
-   Journal: Nature, 2020
+2. (Score: 89) Author3 EF, Author4 GH, et al. Another related article. Nature. 2020;586(7831):583-588. doi:10.1038/s41586-020-2789-1. PMID: 20345678.
 
 [...]
 ```
@@ -300,8 +354,8 @@ elink.fcgi?dbfrom=pubmed&db=pubmed&id=17299597&linkname=pubmed_pubmed_citedin
 This article has been cited 234 times:
 
 ### 2024 (15 citations)
-1. **[Title]** - Smith et al., Nature (PMID: 38123456)
-2. **[Title]** - Jones et al., Cell (PMID: 38234567)
+1. Smith J, Brown A, et al. Article title. Nature. 2024;625(7994):100-110. doi:10.1038/xxx. PMID: 38123456.
+2. Jones M, Lee K, et al. Another citing article. Cell. 2024;187(2):350-365. doi:10.1016/xxx. PMID: 38234567.
 
 ### 2023 (42 citations)
 [...]
@@ -422,26 +476,26 @@ Key themes: autoimmunity, beta cells, genetics. Most cited foundational work:
 ## Comprehensive Report: PMID 17299597
 
 ### Article Information
-- **Title**: [Title]
-- **Authors**: [Author list]
-- **Journal**: [Journal], [Year]
-- **DOI**: [DOI]
+
+**Reference**: Author1 AB, Author2 CD, et al. Full article title. Journal Name. Year;Vol(Issue):Pages. doi:DOI. PMID: 17299597. PMC1790863.
+
 - **Citations**: 234 (as of [date])
+- **Citations/year**: 15.6
+- **Full Text**: Available (PMC1790863)
 
 ### Abstract
 [Full abstract...]
 
-### Full Text Available
-[Yes/No - if yes, summary of sections]
-
 ### Similar Articles (Top 5)
-1. [Similar article 1]
-2. [Similar article 2]
+
+1. Smith J, Jones M, et al. Similar article title. Cell. 2021;184(12):3100. doi:10.1016/xxx. PMID: 21234567.
+2. Chen L, Wang X, et al. Another similar article. Nature. 2020;586:583. doi:10.1038/xxx. PMID: 20345678.
 [...]
 
 ### Recent Citations (Top 10)
-1. [Citing article 1]
-2. [Citing article 2]
+
+1. Author AB, Author CD, et al. Citing article title. Journal. 2024;Vol:Pages. doi:DOI. PMID: XXXXX.
+2. Author EF, Author GH, et al. Another citing article. Journal. 2024;Vol:Pages. doi:DOI. PMID: XXXXX.
 [...]
 
 ### Key Information Extracted
@@ -757,23 +811,14 @@ Most cited foundational work: 'Type 1 Diabetes Mellitus' with 1,892 citations.
 ## Phase 1: Review Articles (Start Here)
 *Read these first for domain overview*
 
-### 1. Pathogenesis of Type 1 Diabetes: Established Facts and New Insights
-**Authors**: Zajec A et al.
-**Journal**: Genes, 2022
-**PMID**: 35456512
-**Key themes**: autoimmunity, beta-cell destruction, environmental factors, epigenetics
+1. Zajec A, et al. Pathogenesis of Type 1 Diabetes: Established Facts and New Insights. Genes. 2022;13(4):706. PMID: 35456512.
+   **Key themes**: autoimmunity, beta-cell destruction, environmental factors, epigenetics
 
-### 2. Type 1 Diabetes Mellitus
-**Authors**: Katsarou A et al.
-**Journal**: Nature Reviews Disease Primers, 2017
-**PMID**: 28358037
-**Key themes**: epidemiology, pathophysiology, treatment advances
+2. Katsarou A, et al. Type 1 Diabetes Mellitus. Nat Rev Dis Primers. 2017;3:17016. PMID: 28358037.
+   **Key themes**: epidemiology, pathophysiology, treatment advances
 
-### 3. Type 1 diabetes mellitus as a disease of the β-cell
-**Authors**: Roep BO et al.
-**Journal**: Nature Reviews Endocrinology, 2021
-**PMID**: 33293704
-**Key themes**: beta-cell dysfunction, immune interaction
+3. Roep BO, et al. Type 1 diabetes mellitus as a disease of the beta-cell. Nat Rev Endocrinol. 2021;17(3):150-161. PMID: 33293704.
+   **Key themes**: beta-cell dysfunction, immune interaction
 
 ## Phase 2: Key Themes Identified
 - **autoimmunity** (mentioned in 5 reviews)
@@ -785,22 +830,16 @@ Most cited foundational work: 'Type 1 Diabetes Mellitus' with 1,892 citations.
 ## Phase 3: Primary Research by Theme
 
 ### Theme: Autoimmunity
-1. **T-cell mediated beta-cell destruction in NOD mice** (456 citations)
-   Journal of Immunology, 2021 | PMID: 34123456
-2. **Regulatory T cells in type 1 diabetes** (234 citations)
-   Diabetes, 2022 | PMID: 35234567
+1. Author A, et al. T-cell mediated beta-cell destruction in NOD mice. J Immunol. 2021;206(5):1012-1023. PMID: 34123456. (456 citations)
+2. Author B, et al. Regulatory T cells in type 1 diabetes. Diabetes. 2022;71(8):1745-1758. PMID: 35234567. (234 citations)
 
 ### Theme: Beta-cell
-1. **Beta-cell stress responses in T1D pathogenesis** (312 citations)
-   Cell Metabolism, 2023 | PMID: 36345678
+1. Author C, et al. Beta-cell stress responses in T1D pathogenesis. Cell Metab. 2023;35(1):89-102. PMID: 36345678. (312 citations)
 
 ## Phase 4: Seminal Works (Foundational Papers)
-1. **Staging presymptomatic type 1 diabetes** (2,100 citations - landmark)
-   Diabetes Care, 2015 | PMID: 26404926
-2. **Type 1 Diabetes Mellitus** (1,892 citations - highly influential)
-   Nature Reviews Disease Primers, 2017 | PMID: 28358037
-3. **An Anti-CD3 Antibody, Teplizumab, in Relatives at Risk** (890 citations)
-   NEJM, 2019 | PMID: 31180194
+1. Insel RA, et al. Staging presymptomatic type 1 diabetes. Diabetes Care. 2015;38(10):1964-1974. PMID: 26404926. (2,100 citations - landmark)
+2. Katsarou A, et al. Type 1 Diabetes Mellitus. Nat Rev Dis Primers. 2017;3:17016. PMID: 28358037. (1,892 citations - highly influential)
+3. Herold KC, et al. An Anti-CD3 Antibody, Teplizumab, in Relatives at Risk for Type 1 Diabetes. N Engl J Med. 2019;381(7):603-613. PMID: 31180194. (890 citations)
 
 ## Suggested Reading Order
 
@@ -833,17 +872,9 @@ Response:
 
 Found 3,456 articles. Showing top 10:
 
-1. **mRNA vaccines: From research to clinical development**
-   Authors: Pardi N, Hogan MJ, et al.
-   Journal: Nature Reviews Drug Discovery, 2023
-   PMID: 36123456
-   Cited by: 892 articles
+1. Pardi N, Hogan MJ, et al. mRNA vaccines: From research to clinical development. Nat Rev Drug Discov. 2023;22(4):267-284. PMID: 36123456. (Cited by: 892)
 
-2. **Advances in mRNA-LNP vaccine technology for infectious diseases**
-   Authors: Verbeke R, Lentacker I, et al.
-   Journal: Molecular Therapy, 2024
-   PMID: 37234567
-   Cited by: 156 articles
+2. Verbeke R, Lentacker I, et al. Advances in mRNA-LNP vaccine technology for infectious diseases. Mol Ther. 2024;32(1):34-56. PMID: 37234567. (Cited by: 156)
 
 [...]
 ```
@@ -856,13 +887,7 @@ User: "Read PMID 32756549"
 Response:
 ## Article: PMID 32756549
 
-**Title**: Safety and immunogenicity of two RNA-based COVID-19 vaccine candidates
-
-**Authors**: Walsh EE, Frenck RW Jr, Falsey AR, et al.
-
-**Journal**: New England Journal of Medicine, 2020 Oct 14;383(25):2439-2450
-
-**DOI**: 10.1056/NEJMoa2027906
+**Reference**: Walsh EE, Frenck RW Jr, Falsey AR, et al. Safety and immunogenicity of two RNA-based COVID-19 vaccine candidates. N Engl J Med. 2020;383(25):2439-2450. doi:10.1056/NEJMoa2027906. PMID: 32756549.
 
 **Abstract**:
 BACKGROUND: BNT162b1 and BNT162b2 are lipid nanoparticle-formulated,
@@ -871,7 +896,7 @@ nucleoside-modified RNA vaccines that encode the SARS-CoV-2 spike protein...
 [Full abstract continues...]
 
 **Keywords**: COVID-19 vaccines, mRNA vaccines, SARS-CoV-2, immunogenicity
-
+**MeSH Terms**: COVID-19 Vaccines, mRNA, SARS-CoV-2, Immunogenicity
 **Publication Types**: Clinical Trial, Phase 1; Clinical Trial, Phase 2
 ```
 
@@ -886,16 +911,12 @@ Response:
 This landmark COVID-19 vaccine study has been cited 4,521 times.
 
 ### Most Recent (2024)
-1. **Long-term efficacy of mRNA COVID-19 vaccines: A systematic review**
-   Chen X, et al. Lancet Infectious Diseases (PMID: 38456789)
+1. Chen X, et al. Long-term efficacy of mRNA COVID-19 vaccines: A systematic review. Lancet Infect Dis. 2024;24(3):312-325. PMID: 38456789.
 
-2. **Comparative immunogenicity of mRNA and protein-based vaccines**
-   Williams K, et al. Nature Medicine (PMID: 38345678)
+2. Williams K, et al. Comparative immunogenicity of mRNA and protein-based vaccines. Nat Med. 2024;30(1):45-58. PMID: 38345678.
 
 ### Most Cited
-1. **Safety and Efficacy of the BNT162b2 mRNA COVID-19 Vaccine**
-   Polack FP, et al. NEJM, 2020 (PMID: 33301246)
-   Cited 12,456 times
+1. Polack FP, et al. Safety and Efficacy of the BNT162b2 mRNA COVID-19 Vaccine. N Engl J Med. 2020;383(27):2603-2615. doi:10.1056/NEJMoa2034577. PMID: 33301246. (Cited 12,456 times)
 
 [...]
 ```
@@ -910,14 +931,10 @@ Response:
 
 Based on shared subjects, citations, and content:
 
-1. **An mRNA Vaccine against SARS-CoV-2 — Preliminary Report** (Score: 98)
-   Jackson LA, et al. NEJM, 2020
-   PMID: 32663912
+1. [Score: 98] Jackson LA, et al. An mRNA Vaccine against SARS-CoV-2 - Preliminary Report. N Engl J Med. 2020;383(20):1920-1931. doi:10.1056/NEJMoa2022483. PMID: 32663912.
    Similarity: Same vaccine platform, similar trial design
 
-2. **Phase I/II study of COVID-19 RNA vaccine BNT162b1** (Score: 95)
-   Mulligan MJ, et al. Nature, 2020
-   PMID: 32785213
+2. [Score: 95] Mulligan MJ, et al. Phase I/II study of COVID-19 RNA vaccine BNT162b1 in adults. Nature. 2020;586(7830):589-593. doi:10.1038/s41586-020-2639-4. PMID: 32785213.
    Similarity: Same vaccine candidate, different population
 
 [...]
@@ -931,26 +948,24 @@ User: "Give me a complete overview of PMID 32756549"
 Response:
 ## Comprehensive Report: PMID 32756549
 
-### Article Information
-- **Title**: Safety and immunogenicity of two RNA-based COVID-19 vaccine candidates
-- **Authors**: Walsh EE, et al. (25 authors)
-- **Journal**: New England Journal of Medicine
-- **Published**: October 14, 2020
-- **DOI**: 10.1056/NEJMoa2027906
-- **Total Citations**: 4,521
+### Reference
+Walsh EE, Frenck RW Jr, Falsey AR, et al. Safety and immunogenicity of two RNA-based COVID-19 vaccine candidates. N Engl J Med. 2020;383(25):2439-2450. doi:10.1056/NEJMoa2027906. PMID: 32756549. PMC7889054.
 
 ### Impact Assessment
+- **Total Citations**: 4,521
 - **Citation Velocity**: 1,506 citations/year
-- **Altmetric Score**: 24,567 (Top 0.01% of all research)
 - **Most Cited By**: Vaccine development studies
 
 ### Abstract
 [Full abstract...]
 
-### Related Research
-- Similar articles: 45 closely related papers
-- By same authors: 23 papers on mRNA vaccines
-- Citing articles: 4,521 papers
+### Top Citing Articles
+1. Polack FP, et al. Safety and Efficacy of the BNT162b2 mRNA COVID-19 Vaccine. N Engl J Med. 2020;383(27):2603-2615. PMID: 33301246. (12,456 citations)
+2. Baden LR, et al. Efficacy and Safety of the mRNA-1273 SARS-CoV-2 Vaccine. N Engl J Med. 2021;384(5):403-416. PMID: 33378609. (8,234 citations)
+
+### Similar Articles
+1. [Score: 98] Jackson LA, et al. An mRNA Vaccine against SARS-CoV-2 - Preliminary Report. N Engl J Med. 2020;383(20):1920-1931. PMID: 32663912.
+2. [Score: 95] Mulligan MJ, et al. Phase I/II study of COVID-19 RNA vaccine BNT162b1. Nature. 2020;586(7830):589-593. PMID: 32785213.
 
 ### Key Contributions
 1. First phase 1/2 data for BNT162b2 vaccine

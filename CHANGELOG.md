@@ -117,6 +117,27 @@ This implements a biologist's approach to literature exploration:
 4. Identify foundational papers for deep understanding
 5. Get a suggested reading order
 
+## [1.2.0] - 2026-02-04
+
+### Added
+
+**Strictly Formatted References (NLM/Vancouver Style):**
+- Mandatory NLM/Vancouver-style reference formatting for all article citations in output
+- New "Mandatory Reference Formatting" section in SKILL.md with rules and templates
+- Enhanced `format_citation()` in helpers.py with DOI and PMC ID support
+- New `format_authors_apa()` helper for APA-style author formatting
+- New `format_reference_list()` helper for batch formatting multiple articles
+
+### Changed
+
+- Updated all output format examples in SKILL.md to use strict Vancouver-style references
+- Updated workflow examples (Search, Read Abstract, Citations, Similar Articles, Comprehensive Report, Strategic Literature Search) with formatted references
+- Improved `format_citation()` to produce proper NLM/Vancouver format with DOI, PMID, and PMC
+
+### Why This Update
+
+Biomedical literature should always be cited in proper NLM/Vancouver format — the standard used by PubMed, MEDLINE, and most biomedical journals. This ensures consistent, professional, and verifiable references in all skill output.
+
 ## [Unreleased]
 
 ### Planned

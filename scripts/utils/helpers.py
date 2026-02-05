@@ -344,14 +344,30 @@ def format_single_author(author: Dict[str, str]) -> str:
 
 def format_citation(article: Dict[str, Any], style: str = "vancouver") -> str:
     """
-    Format article citation.
+    Format article as a strictly formatted academic reference.
+
+    Produces NLM/Vancouver-style citations by default, which is the standard
+    for biomedical literature (used by PubMed, MEDLINE, and most biomedical journals).
 
     Args:
-        article: Article metadata dict
+        article: Article metadata dict with keys: authors, title, journal, year,
+                 volume, issue, pages, doi, pmid, pmc
         style: Citation style ("vancouver", "apa", "simple")
 
     Returns:
-        Formatted citation string
+        Strictly formatted reference string
+
+    Examples:
+        Vancouver (default):
+            Smith J, Jones M, Wilson K, et al. Article title here. Nature Medicine.
+            2024;30(3):456-467. doi:10.1038/s41591-024-12345-6. PMID: 38123456.
+
+        APA:
+            Smith, J., Jones, M., & Wilson, K. (2024). Article title here.
+            Nature Medicine, 30(3), 456-467.
+
+        Simple:
+            Smith J et al. (2024). Article title here. Nature Medicine. PMID: 38123456.
     """
     authors = article.get('authors', [])
     title = article.get('title', 'Untitled')
@@ -360,11 +376,17 @@ def format_citation(article: Dict[str, Any], style: str = "vancouver") -> str:
     volume = article.get('volume', '')
     issue = article.get('issue', '')
     pages = article.get('pages', '')
+    doi = article.get('doi', '')
     pmid = article.get('pmid', '')
+    pmc = article.get('pmc', '')
 
-    author_str = format_authors(authors, max_authors=6)
+    # Ensure title ends with period (remove trailing period first to avoid doubles)
+    title = title.rstrip('.')
 
     if style == "vancouver":
+        # NLM/Vancouver format: standard for biomedical literature
+        # AuthorLastname Initials, ... Title. Journal. Year;Vol(Issue):Pages. doi:DOI. PMID: X.
+        author_str = format_authors(authors, max_authors=6, style="short")
         citation = f"{author_str}. {title}. {journal}."
         if year:
             citation += f" {year}"
@@ -375,15 +397,104 @@ def format_citation(article: Dict[str, Any], style: str = "vancouver") -> str:
         if pages:
             citation += f":{pages}"
         citation += "."
+        if doi:
+            citation += f" doi:{doi}."
+        if pmid:
+            citation += f" PMID: {pmid}."
+        if pmc:
+            citation += f" {pmc}."
+        return citation
+
+    elif style == "apa":
+        # APA format
+        author_str = format_authors_apa(authors, max_authors=6)
+        citation = f"{author_str} ({year}). {title}. *{journal}*"
+        if volume:
+            citation += f", *{volume}*"
+        if issue:
+            citation += f"({issue})"
+        if pages:
+            citation += f", {pages}"
+        citation += "."
+        if doi:
+            citation += f" https://doi.org/{doi}"
+        return citation
+
+    else:  # simple
+        author_str = format_authors(authors, max_authors=3, style="short")
+        citation = f"{author_str} ({year}). {title}. {journal}."
         if pmid:
             citation += f" PMID: {pmid}."
         return citation
 
-    elif style == "simple":
-        return f"{author_str} ({year}). {title}. {journal}. PMID: {pmid}"
 
-    else:  # APA-like
-        return f"{author_str} ({year}). {title}. {journal}, {volume}({issue}), {pages}."
+def format_authors_apa(authors: List[Dict[str, str]], max_authors: int = 6) -> str:
+    """
+    Format author list in APA style (LastName, F. M.).
+
+    Args:
+        authors: List of author dicts
+        max_authors: Maximum authors before truncation
+
+    Returns:
+        APA-formatted author string
+    """
+    if not authors:
+        return "Unknown authors"
+
+    formatted = []
+    for author in authors[:max_authors]:
+        last = author.get('LastName', '')
+        initials = author.get('Initials', '')
+        if last and initials:
+            # APA uses periods after each initial
+            apa_initials = ", ".join(f"{c}." for c in initials if c.isalpha())
+            formatted.append(f"{last}, {apa_initials}")
+        elif last:
+            formatted.append(last)
+
+    if len(formatted) == 0:
+        return "Unknown authors"
+    elif len(formatted) == 1:
+        result = formatted[0]
+    elif len(formatted) == 2:
+        result = f"{formatted[0]}, & {formatted[1]}"
+    else:
+        result = ", ".join(formatted[:-1]) + f", & {formatted[-1]}"
+
+    if len(authors) > max_authors:
+        # APA uses "..." for >20 authors, "et al." for 7-20
+        result = ", ".join(formatted[:6]) + ", ... " + format_authors_apa([authors[-1]], 1)
+
+    return result
+
+
+def format_reference_list(articles: List[Dict[str, Any]],
+                          style: str = "vancouver",
+                          numbered: bool = True) -> str:
+    """
+    Format a list of articles as a strictly formatted reference list.
+
+    Args:
+        articles: List of article metadata dicts
+        style: Citation style ("vancouver", "apa", "simple")
+        numbered: Whether to number the references
+
+    Returns:
+        Formatted reference list as a single string
+
+    Example output (vancouver):
+        1. Smith J, Jones M, et al. Article title. Nature. 2024;30(3):456. doi:10.1038/xxx. PMID: 12345.
+        2. Chen L, Wang X. Another article. Cell. 2024;185(1):100. doi:10.1016/xxx. PMID: 67890.
+    """
+    lines = []
+    for i, article in enumerate(articles, 1):
+        citation = format_citation(article, style=style)
+        if numbered:
+            lines.append(f"{i}. {citation}")
+        else:
+            lines.append(f"- {citation}")
+    return "\n".join(lines)
 
 
 # =============================================================================
