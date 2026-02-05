@@ -16,9 +16,12 @@ A Claude Code skill for reading PubMed articles like a real biologist would - br
 ### Installation
 
 ```bash
-# Install the skill
-/install-plugin git@github.com:yuanhao96/pubmed-reader-cskill.git
+# Add and install the skill from the plugin marketplace
+/plugin marketplace add https://github.com/yuanhao96/pubmed-reader-cskill
+/plugin install pubmed-reader-cskill
 ```
+
+Then select `pubmed-reader-cskill` from the list to install it.
 
 ### Optional: Configure API Key
 

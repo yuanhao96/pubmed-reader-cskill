@@ -11,13 +11,17 @@ A comprehensive Claude Code skill for reading PubMed articles like a real biolog
 
 This skill should be activated when the user:
 
+- **Explores a research domain**: "Give me an overview of type 1 diabetes", "Literature review on CRISPR", "I want to understand cancer immunotherapy"
 - **Searches for literature**: "Search PubMed for CRISPR", "Find papers about cancer immunotherapy", "Literature review on Alzheimer's biomarkers"
+- **Wants strategic literature search**: "Start with review articles on...", "Find reviews first then research papers", "What are the key papers on..."
 - **Reads specific articles**: "Read PMID 12345678", "Get abstract for this paper", "Show me the full text"
 - **Explores citations**: "What papers cite this?", "Find citing articles for PMID X", "Show references"
 - **Finds related work**: "Find similar papers", "Related articles to this study", "More papers like this"
 - **Mentions PMIDs or PMCIDs**: Any query containing "PMID", "PMC", or article identifiers
 
 ### Keywords That Trigger Activation
+
+**Strategic Search Keywords**: literature overview, domain overview, understand the field, review articles first, seminal works, foundational papers, key papers, reading order, explore the literature
 
 **Search Keywords**: pubmed, search, find articles, papers, literature, biomedical, medical literature, scientific papers, research articles
 
@@ -303,7 +307,103 @@ This article has been cited 234 times:
 [...]
 ```
 
-### Workflow 6: Comprehensive Literature Report
+### Workflow 6: Strategic Literature Search (Reviews First)
+
+**User says**: "Give me a literature overview of type 1 diabetes" or "Literature review on CRISPR" or "I want to understand the field of cancer immunotherapy"
+
+**Process** (How a Real Biologist Explores Literature):
+1. **Phase 1 - Domain Overview**: Search for review articles first (systematic reviews, meta-analyses)
+2. **Phase 2 - Theme Extraction**: Extract key themes, MeSH terms, and concepts from reviews
+3. **Phase 3 - Primary Research**: Find research articles organized by identified themes
+4. **Phase 4 - Seminal Works**: Identify highly-cited foundational papers (>100 citations)
+5. **Generate Reading Order**: Suggest optimal sequence: reviews → seminal → research by theme
+
+**Script**: `scripts/strategic_literature_search.py`
+
+**Example Query**:
+```
+strategic_literature_search("type 1 diabetes pathogenesis", max_reviews=5)
+```
+
+**Output Format**:
+```
+# Strategic Literature Search: type 1 diabetes pathogenesis
+
+## Executive Summary
+Literature search on 'type 1 diabetes pathogenesis' identified 28 key articles.
+Start with 'Pathogenesis of Type 1 Diabetes...' (Genes, 2022) for domain overview.
+Key themes: autoimmunity, beta cells, genetics. Most cited foundational work:
+'Type 1 Diabetes Mellitus' with 1,200 citations.
+
+## Phase 1: Review Articles (Start Here)
+*Read these first for domain overview*
+
+### 1. Pathogenesis of Type 1 Diabetes: Established Facts and New Insights
+**Authors**: Zajec A et al.
+**Journal**: Genes, 2022
+**PMID**: 35456512
+**Key themes**: autoimmunity, beta-cell destruction, environmental factors
+
+### 2. Type 1 Diabetes Mellitus
+**Authors**: Katsarou A et al.
+**Journal**: Nature Reviews Disease Primers, 2017
+**PMID**: 28358037
+...
+
+## Phase 2: Key Themes Identified
+- **autoimmunity** (mentioned in 4 reviews)
+- **beta-cell** (mentioned in 3 reviews)
+- **genetics** (mentioned in 3 reviews)
+...
+
+## Phase 3: Primary Research by Theme
+
+### Theme: Autoimmunity
+1. **T-cell mediated destruction mechanisms...** (234 citations)
+   Journal of Immunology, 2023 | PMID: 37123456
+
+### Theme: Beta-cell
+1. **Beta-cell stress and dysfunction in T1D...** (156 citations)
+   Diabetes, 2022 | PMID: 36234567
+...
+
+## Phase 4: Seminal Works (Foundational Papers)
+*Highly-cited papers that shaped the field*
+
+1. **Staging presymptomatic type 1 diabetes** (2,100 citations - landmark)
+   Diabetes Care, 2015 | PMID: 26404926
+
+2. **Type 1 Diabetes Mellitus** (1,200 citations - highly influential)
+   Nature Reviews Disease Primers, 2017 | PMID: 28358037
+...
+
+## Suggested Reading Order
+
+**Start with Overview**
+⭐ 1. [review] PMID 35456512 - Pathogenesis of Type 1 Diabetes...
+   *Start with domain overview*
+○ 2. [review] PMID 28358037 - Type 1 Diabetes Mellitus...
+   *Additional perspective*
+
+**Foundational Papers**
+⭐ 3. [seminal] PMID 26404926 - Staging presymptomatic type 1...
+   *Foundational paper (2,100 citations)*
+
+**Deep Dive by Theme**
+○ 4. [research] PMID 37123456 - T-cell mediated destruction...
+   *Primary research on autoimmunity*
+```
+
+**Key Features**:
+- Mimics how experienced researchers explore unfamiliar domains
+- Reviews first → establishes context before diving into details
+- Automatic theme extraction from MeSH terms and keywords
+- Identifies seminal works for foundational understanding
+- Generates optimal reading order with priorities
+
+---
+
+### Workflow 7: Comprehensive Article Report
 
 **User says**: "Give me a complete overview of this paper PMID 17299597"
 
@@ -457,6 +557,46 @@ report = comprehensive_article_report(
 - `literature_overview(query, max_articles)` - Overview of a research topic
 - `compare_articles(pmids)` - Compare multiple articles
 
+#### `scripts/strategic_literature_search.py`
+Strategic literature search: reviews first, then research articles - like a real biologist.
+
+```python
+from strategic_literature_search import strategic_literature_search
+
+# Full strategic search
+result = strategic_literature_search(
+    topic="type 1 diabetes pathogenesis",
+    max_reviews=5,
+    max_research_per_review=3,
+    years_back=5,
+    include_seminal_works=True
+)
+
+# Quick overview (reviews only)
+from strategic_literature_search import quick_literature_overview
+quick = quick_literature_overview("CRISPR gene therapy", max_reviews=3)
+
+# Deep analysis with focus areas
+from strategic_literature_search import deep_literature_analysis
+deep = deep_literature_analysis(
+    "cancer immunotherapy",
+    focus_areas=["checkpoint inhibitors", "CAR-T cells"]
+)
+```
+
+**Functions**:
+- `strategic_literature_search(topic, **options)` - Full 4-phase strategic search
+- `quick_literature_overview(topic, max_reviews)` - Quick review-only search
+- `deep_literature_analysis(topic, focus_areas)` - Comprehensive analysis
+- `format_strategic_search_results(result)` - Format results for display
+
+**Search Strategy**:
+1. Phase 1: Find review articles for domain overview
+2. Phase 2: Extract themes from reviews (MeSH terms, keywords)
+3. Phase 3: Find primary research articles by theme
+4. Phase 4: Identify seminal/highly-cited foundational papers
+5. Generate optimal reading order
+
 ### Utility Scripts
 
 #### `scripts/utils/helpers.py`
@@ -593,7 +733,97 @@ Optional `config.json` in `assets/`:
 
 ## Usage Examples
 
-### Example 1: Basic Literature Search
+### Example 1: Strategic Literature Search (Reviews First)
+
+```
+User: "I want to understand the field of type 1 diabetes - give me a literature overview"
+
+Response:
+# Strategic Literature Search: type 1 diabetes
+
+## Executive Summary
+Literature search on 'type 1 diabetes' identified 32 key articles.
+Start with 'Pathogenesis of Type 1 Diabetes: Established Facts and New Insights'
+(Genes, 2022) for domain overview. Key themes: autoimmunity, beta-cell, genetics.
+Most cited foundational work: 'Type 1 Diabetes Mellitus' with 1,892 citations.
+
+## Search Statistics
+- **Total articles identified**: 32
+- **Review articles**: 5
+- **Research articles**: 15
+- **Seminal works**: 12
+- **Key themes identified**: 8
+
+## Phase 1: Review Articles (Start Here)
+*Read these first for domain overview*
+
+### 1. Pathogenesis of Type 1 Diabetes: Established Facts and New Insights
+**Authors**: Zajec A et al.
+**Journal**: Genes, 2022
+**PMID**: 35456512
+**Key themes**: autoimmunity, beta-cell destruction, environmental factors, epigenetics
+
+### 2. Type 1 Diabetes Mellitus
+**Authors**: Katsarou A et al.
+**Journal**: Nature Reviews Disease Primers, 2017
+**PMID**: 28358037
+**Key themes**: epidemiology, pathophysiology, treatment advances
+
+### 3. Type 1 diabetes mellitus as a disease of the β-cell
+**Authors**: Roep BO et al.
+**Journal**: Nature Reviews Endocrinology, 2021
+**PMID**: 33293704
+**Key themes**: beta-cell dysfunction, immune interaction
+
+## Phase 2: Key Themes Identified
+- **autoimmunity** (mentioned in 5 reviews)
+- **beta-cell** (mentioned in 4 reviews)
+- **genetics** (mentioned in 3 reviews)
+- **immunotherapy** (mentioned in 3 reviews)
+- **prevention** (mentioned in 2 reviews)
+
+## Phase 3: Primary Research by Theme
+
+### Theme: Autoimmunity
+1. **T-cell mediated beta-cell destruction in NOD mice** (456 citations)
+   Journal of Immunology, 2021 | PMID: 34123456
+2. **Regulatory T cells in type 1 diabetes** (234 citations)
+   Diabetes, 2022 | PMID: 35234567
+
+### Theme: Beta-cell
+1. **Beta-cell stress responses in T1D pathogenesis** (312 citations)
+   Cell Metabolism, 2023 | PMID: 36345678
+
+## Phase 4: Seminal Works (Foundational Papers)
+1. **Staging presymptomatic type 1 diabetes** (2,100 citations - landmark)
+   Diabetes Care, 2015 | PMID: 26404926
+2. **Type 1 Diabetes Mellitus** (1,892 citations - highly influential)
+   Nature Reviews Disease Primers, 2017 | PMID: 28358037
+3. **An Anti-CD3 Antibody, Teplizumab, in Relatives at Risk** (890 citations)
+   NEJM, 2019 | PMID: 31180194
+
+## Suggested Reading Order
+
+**Start with Overview**
+⭐ 1. [review] PMID 35456512 - Pathogenesis of Type 1 Diabetes...
+   *Start with domain overview*
+○ 2. [review] PMID 28358037 - Type 1 Diabetes Mellitus
+   *Comprehensive disease primer*
+
+**Foundational Papers**
+⭐ 3. [seminal] PMID 26404926 - Staging presymptomatic type 1 diabetes
+   *Foundational paper (2,100 citations) - defines disease stages*
+⭐ 4. [seminal] PMID 31180194 - Teplizumab trial
+   *Landmark prevention trial*
+
+**Deep Dive by Theme**
+○ 5. [research] PMID 34123456 - T-cell mediated destruction
+   *Primary research on autoimmunity*
+○ 6. [research] PMID 36345678 - Beta-cell stress responses
+   *Primary research on beta-cell*
+```
+
+### Example 2: Basic Literature Search
 
 ```
 User: "Search PubMed for mRNA vaccine development"

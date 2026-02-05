@@ -77,6 +77,46 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Automatic literature review generation
 - Integration with reference management tools
 
+## [1.1.0] - 2026-02-04
+
+### Added
+
+**Strategic Literature Search (Reviews First Workflow):**
+- `strategic_literature_search()`: 4-phase strategic search like real biologists do
+  - Phase 1: Find review articles for domain overview
+  - Phase 2: Extract key themes from reviews (MeSH terms, keywords)
+  - Phase 3: Find primary research articles organized by theme
+  - Phase 4: Identify seminal/highly-cited foundational papers
+- `quick_literature_overview()`: Fast review-only search for quick domain understanding
+- `deep_literature_analysis()`: Comprehensive search with focus areas
+- `format_strategic_search_results()`: Beautiful formatted output
+
+**New Features:**
+- Automatic theme extraction from review articles
+- Review article scoring and ranking (recency, journal quality, article type)
+- Seminal work identification (papers with >100 citations)
+- Reading order generation with priorities (⭐ high, ○ medium)
+- Executive summary generation
+
+**New Workflow:**
+- Workflow 6 in SKILL.md: Strategic Literature Search
+- Example usage patterns for domain exploration
+
+### Changed
+
+- Updated SKILL.md with new workflow documentation
+- Added strategic search keywords to activation triggers
+- Expanded "When to Use" section for domain exploration queries
+
+### Why This Update
+
+This implements a biologist's approach to literature exploration:
+1. Start with reviews to understand the landscape
+2. Extract themes to guide further reading
+3. Find primary research by theme of interest
+4. Identify foundational papers for deep understanding
+5. Get a suggested reading order
+
 ## [Unreleased]
 
 ### Planned

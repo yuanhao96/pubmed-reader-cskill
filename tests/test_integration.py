@@ -16,6 +16,11 @@ from fetch_fulltext import check_oa_availability, get_fulltext
 from find_similar import find_similar_articles
 from find_citations import get_citing_articles, get_references
 from comprehensive_report import comprehensive_article_report
+from strategic_literature_search import (
+    strategic_literature_search,
+    quick_literature_overview,
+    format_strategic_search_results
+)
 
 
 def test_search_pubmed_basic():
@@ -324,6 +329,105 @@ def test_validation_integration():
         return False
 
 
+def test_strategic_literature_search():
+    """Test strategic literature search (reviews first workflow)."""
+    print("\n Testing strategic_literature_search()...")
+
+    try:
+        result = strategic_literature_search(
+            topic="type 1 diabetes",
+            max_reviews=2,
+            max_research_per_review=2,
+            years_back=5,
+            include_seminal_works=True
+        )
+
+        assert result.get('success'), f"Failed: {result.get('error')}"
+
+        # Check phases
+        phases = result.get('phases', {})
+        assert 'phase1_reviews' in phases, "Missing phase1_reviews"
+        assert 'phase2_themes' in phases, "Missing phase2_themes"
+        assert 'phase3_research' in phases, "Missing phase3_research"
+
+        # Check statistics
+        stats = result.get('statistics', {})
+        print(f"  Total articles: {stats.get('total_articles', 0)}")
+        print(f"  Reviews: {stats.get('total_reviews', 0)}")
+        print(f"  Research: {stats.get('total_research_articles', 0)}")
+        print(f"  Seminal: {stats.get('total_seminal_works', 0)}")
+        print(f"  Themes: {stats.get('themes_identified', 0)}")
+
+        # Check reading order
+        reading_order = result.get('reading_order', [])
+        assert len(reading_order) > 0, "No reading order generated"
+        print(f"  Reading order: {len(reading_order)} items")
+
+        # Check summary
+        summary = result.get('summary', '')
+        assert len(summary) > 0, "No summary generated"
+        print(f"  Summary: {summary[:100]}...")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_quick_literature_overview():
+    """Test quick literature overview (reviews only)."""
+    print("\n Testing quick_literature_overview()...")
+
+    try:
+        result = quick_literature_overview("CRISPR gene therapy", max_reviews=2)
+
+        assert result.get('success'), f"Failed: {result.get('error')}"
+
+        stats = result.get('statistics', {})
+        # Quick overview should only have reviews
+        assert stats.get('total_research_articles', 0) == 0, "Should not have research articles"
+
+        print(f"  Reviews found: {stats.get('total_reviews', 0)}")
+        print(f"  Search strategy: {result.get('search_strategy')}")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
+def test_strategic_search_formatting():
+    """Test formatting of strategic search results."""
+    print("\n Testing format_strategic_search_results()...")
+
+    try:
+        result = quick_literature_overview("immunotherapy", max_reviews=2)
+
+        if result.get('success'):
+            formatted = format_strategic_search_results(result)
+
+            assert len(formatted) > 100, "Formatted output too short"
+            assert "Strategic Literature Search" in formatted, "Missing title"
+            assert "Phase 1" in formatted, "Missing phase 1"
+
+            print(f"  Formatted output length: {len(formatted)} chars")
+            print(f"  First 200 chars:")
+            print(f"  {formatted[:200]}...")
+
+            return True
+        else:
+            print(f"  Search failed, cannot test formatting")
+            return True  # Not a formatting failure
+
+    except Exception as e:
+        print(f"  FAILED: {e}")
+        return False
+
+
 def main():
     """Run all integration tests."""
     print("=" * 70)
@@ -344,6 +448,9 @@ def main():
         ("Query Builder", test_query_builder),
         ("Invalid PMID Handling", test_invalid_pmid_handling),
         ("Validation Integration", test_validation_integration),
+        ("Strategic Literature Search", test_strategic_literature_search),
+        ("Quick Literature Overview", test_quick_literature_overview),
+        ("Strategic Search Formatting", test_strategic_search_formatting),
     ]
 
     results = []
