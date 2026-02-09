@@ -22,10 +22,8 @@ A Claude Code skill for reading PubMed, arXiv, bioRxiv, and medRxiv articles lik
 ```bash
 # Add and install the skill from the plugin marketplace
 /plugin marketplace add https://github.com/yuanhao96/pubmed-reader-cskill
-/plugin install pubmed-reader-cskill
+/plugin install pubmed-reader-plugin
 ```
-
-Then select `pubmed-reader-cskill` from the list to install it.
 
 ### Optional: Configure API Key
 
