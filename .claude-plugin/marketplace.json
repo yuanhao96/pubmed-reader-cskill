@@ -16,7 +16,12 @@
       "description": "PubMed, arXiv, bioRxiv & medRxiv reader and literature explorer for scientists - search articles and preprints, read abstracts and full text, follow citations, find similar papers, and extract key information from biomedical literature and preprints using NCBI E-utilities, BioC PMC, arXiv, and bioRxiv/medRxiv APIs",
       "source": "./",
       "strict": false,
-      "skills": ["./"]
+      "skills": [
+        "./skills/SKILL-pubmed-lookup.md",
+        "./skills/SKILL-pubmed-deep.md",
+        "./skills/SKILL-arxiv.md",
+        "./skills/SKILL-biorxiv.md"
+      ]
     }
   ],
   "activation": {
