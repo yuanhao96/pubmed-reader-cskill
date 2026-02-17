@@ -235,6 +235,23 @@ This implements a biologist's approach to literature exploration:
 
 Biomedical literature should always be cited in proper NLM/Vancouver format — the standard used by PubMed, MEDLINE, and most biomedical journals. This ensures consistent, professional, and verifiable references in all skill output.
 
+## [1.5.0] - 2026-02-17
+
+### Changed
+
+**Skill Architecture Refactor:**
+- Split monolithic `SKILL.md` into 4 focused, specialized skill files in `skills/` directory
+- `SKILL-pubmed-lookup.md`: Simple PubMed operations — search, read abstract, fetch full text, find similar/citing articles
+- `SKILL-pubmed-deep.md`: Strategic literature search and comprehensive per-article reports
+- `SKILL-arxiv.md`: All arXiv operations — search, read abstracts, fetch HTML full text
+- `SKILL-biorxiv.md`: All bioRxiv/medRxiv operations — search, read abstracts, fetch JATS/HTML full text
+- Each skill now has explicit `Do NOT use for` guidance directing to sibling skills for cleaner routing
+- Archived original `SKILL.md` as `SKILL.md.archive`
+
+### Why This Update
+
+The original single `SKILL.md` grew to cover PubMed, arXiv, and bioRxiv/medRxiv in one file, making it harder for Claude to select the right behavior for a given query. Splitting into domain-specific skills improves activation precision, reduces context bloat per invocation, and makes each skill's scope immediately clear.
+
 ## [Unreleased]
 
 ### Planned

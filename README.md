@@ -157,6 +157,19 @@ Returns:
 - Full text (if available)
 - Auto-generated summary
 
+## Skill Architecture
+
+The plugin ships 4 focused skills, each covering a specific domain:
+
+| Skill file | Scope |
+|---|---|
+| `SKILL-pubmed-lookup.md` | PubMed search, abstract read, full text, similar/citing articles |
+| `SKILL-pubmed-deep.md` | Strategic literature search and comprehensive per-article reports |
+| `SKILL-arxiv.md` | arXiv search, abstract read, HTML full text |
+| `SKILL-biorxiv.md` | bioRxiv/medRxiv search, abstract read, JATS/HTML full text |
+
+Each skill has explicit guidance routing queries to the right sibling skill when the request falls outside its scope.
+
 ## Testing
 
 ### Run All Tests
@@ -198,7 +211,7 @@ PASS: Fetch Abstract
 PASS: Find Similar Articles
 ...
 
-Results: 13/13 passed
+Results: 32/32 passed
 ```
 
 ## API Reference
