@@ -1,6 +1,6 @@
 ---
 name: biorxiv
-description: Search bioRxiv and medRxiv preprints, read abstracts, and retrieve full text for biology and medical preprints using the bioRxiv/medRxiv API
+description: This skill should be used when the user asks to "search bioRxiv", "search medRxiv", "find biology preprints", "find medical preprints", "read bioRxiv preprint", "get full text of bioRxiv", mentions a bioRxiv/medRxiv DOI (10.1101/...), references a biorxiv.org or medrxiv.org URL, or asks about recent biology or medical preprints.
 ---
 
 # bioRxiv/medRxiv — Search, Read & Full Text

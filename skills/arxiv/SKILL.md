@@ -1,6 +1,6 @@
 ---
 name: arxiv
-description: Search arXiv preprints, read paper abstracts, and retrieve full text for papers in CS, physics, math, and quantitative biology using the arXiv API
+description: This skill should be used when the user asks to "search arXiv", "find arXiv papers", "read arXiv paper", "get full text of arXiv", mentions an arXiv ID (YYMM.NNNNN format), references an arxiv.org URL, or asks about papers in CS, physics, math, or quantitative biology preprint categories (cs.CL, cs.AI, cs.LG, cs.CV, etc.).
 ---
 
 # arXiv — Search, Read & Full Text

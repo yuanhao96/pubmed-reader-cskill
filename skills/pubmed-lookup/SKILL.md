@@ -1,6 +1,6 @@
 ---
 name: pubmed-lookup
-description: Search PubMed for articles, read abstracts and full text, find similar papers, and explore citation networks using NCBI E-utilities and BioC PMC API
+description: This skill should be used when the user asks to "search PubMed", "find papers about", "read PMID", "get abstract for PMID", "get full text of PMID", "find similar articles to PMID", "what papers cite PMID", or mentions a PMID/PMC identifier. Use for direct PubMed operations: searching by query, reading abstracts, fetching full text, finding similar articles, and finding citing articles.
 ---
 
 # PubMed Lookup — Search, Read, Cite, Explore

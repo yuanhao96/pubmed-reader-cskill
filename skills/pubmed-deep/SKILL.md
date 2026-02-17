@@ -1,6 +1,6 @@
 ---
 name: pubmed-deep
-description: Strategic multi-phase literature search and comprehensive article reports — reviews-first domain exploration and complete per-article analysis for PubMed
+description: This skill should be used when the user asks for "literature overview", "literature review", "understand the field", "domain overview", "review articles first", "seminal works", "foundational papers", "key papers", "reading order", "explore the literature", "comprehensive report on PMID", "full analysis of PMID", or "deep dive". Use for strategic multi-phase literature search (reviews-first) and complete per-article comprehensive reports.
 ---
 
 # PubMed Deep — Strategic Search & Comprehensive Reports

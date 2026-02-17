@@ -235,6 +235,23 @@ This implements a biologist's approach to literature exploration:
 
 Biomedical literature should always be cited in proper NLM/Vancouver format — the standard used by PubMed, MEDLINE, and most biomedical journals. This ensures consistent, professional, and verifiable references in all skill output.
 
+## [1.6.0] - 2026-02-17
+
+### Changed
+
+**Skill Directory Restructure (Claude Code Plugin Compliance):**
+- Moved each skill from a flat `SKILL-name.md` file into its own subdirectory with a `SKILL.md` file, matching the Claude Code plugin auto-discovery format
+- `skills/SKILL-pubmed-lookup.md` → `skills/pubmed-lookup/SKILL.md`
+- `skills/SKILL-pubmed-deep.md` → `skills/pubmed-deep/SKILL.md`
+- `skills/SKILL-arxiv.md` → `skills/arxiv/SKILL.md`
+- `skills/SKILL-biorxiv.md` → `skills/biorxiv/SKILL.md`
+- Updated `.claude-plugin/marketplace.json` skill paths to reference new `SKILL.md` locations
+- Updated `description` frontmatter in each `SKILL.md` to use third-person trigger phrasing per plugin skill standards
+
+### Why This Update
+
+Claude Code auto-discovers skills by scanning for subdirectories containing `SKILL.md` files. The previous flat `SKILL-name.md` format was not picked up by the auto-discovery mechanism, preventing skills from loading correctly after plugin installation.
+
 ## [1.5.0] - 2026-02-17
 
 ### Changed

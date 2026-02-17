@@ -17,10 +17,10 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/SKILL-pubmed-lookup.md",
-        "./skills/SKILL-pubmed-deep.md",
-        "./skills/SKILL-arxiv.md",
-        "./skills/SKILL-biorxiv.md"
+        "./skills/pubmed-lookup/SKILL.md",
+        "./skills/pubmed-deep/SKILL.md",
+        "./skills/arxiv/SKILL.md",
+        "./skills/biorxiv/SKILL.md"
       ]
     }
   ],
